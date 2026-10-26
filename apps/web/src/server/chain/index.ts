@@ -47,10 +47,23 @@ async function submit<T>(tx: contract.AssembledTransaction<T>, what: string): Pr
   }
 }
 
+/** The generated Result error can have an empty message; Stellar RPC has the actual failure. */
+function simulationFailure(simulation: unknown): string | null {
+  if (!simulation || typeof simulation !== "object" || !("error" in simulation) || typeof simulation.error !== "string") {
+    return null;
+  }
+  return simulation.error.split(/\r?\n/, 1)[0] || null;
+}
+
 /** Contract calls return Result<T>; turn a contract error into a ChainError. */
-function unwrap<T>(result: { isErr(): boolean; unwrap(): T; unwrapErr?: () => { message: string } }, what: string): T {
+function unwrap<T>(
+  result: { isErr(): boolean; unwrap(): T; unwrapErr?: () => { message: string } },
+  what: string,
+  simulation?: unknown,
+): T {
   if (result.isErr()) {
-    throw new ChainError(`${what}: ${result.unwrapErr?.().message ?? "contract error"}`);
+    const detail = simulationFailure(simulation) || result.unwrapErr?.().message?.trim() || "contract error";
+    throw new ChainError(`${what}: ${detail}`);
   }
   return result.unwrap();
 }
@@ -82,7 +95,7 @@ export async function createBooking(b: NewBooking): Promise<string> {
     refund_until: unix(b.refundUntil),
     confirm_by: unix(b.confirmBy),
   });
-  unwrap(tx.result, "create_booking simulation");
+  unwrap(tx.result, "create_booking simulation", tx.simulation);
   return submit(tx, "create_booking");
 }
 
@@ -92,13 +105,13 @@ export async function createBooking(b: NewBooking): Promise<string> {
  */
 export async function buildFundTx(id: bigint, traveler: string): Promise<string> {
   const tx = await escrowAs({ publicKey: traveler }).fund({ id });
-  unwrap(tx.result, "fund simulation");
+  unwrap(tx.result, "fund simulation", tx.simulation);
   return tx.toXDR();
 }
 
 export async function release(id: bigint): Promise<string> {
   const tx = await escrowAs(signer(env().ESCROW_ADMIN_SECRET)).release({ id });
-  unwrap(tx.result, "release simulation");
+  unwrap(tx.result, "release simulation", tx.simulation);
   return submit(tx, "release");
 }
 
@@ -108,7 +121,7 @@ export async function refund(id: bigint, toTraveler: bigint, toPayee: bigint): P
     to_traveler: toTraveler,
     to_payee: toPayee,
   });
-  unwrap(tx.result, "refund simulation");
+  unwrap(tx.result, "refund simulation", tx.simulation);
   return submit(tx, "refund");
 }
 

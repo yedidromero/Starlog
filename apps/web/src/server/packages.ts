@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { and, eq, inArray } from "drizzle-orm";
 import type { Session } from "./auth/session";
-import { assertCanPay, assertCanSettle, BookingError } from "./bookings";
+import { assertCanPay, assertCanSettle, BookingError, buildTravelerFundTx } from "./bookings";
 import * as chain from "./chain";
 import { db, schema } from "./db";
 import * as duffel from "./duffel";
@@ -170,7 +170,7 @@ export async function startPackageBooking(
       ...deadlines,
     });
     await database.update(bookings).set({ txHashes: { create }, updatedAt: new Date() }).where(eq(bookings.id, booking.id));
-    const fundXdr = await chain.buildFundTx(BigInt(booking.id), session.wallet);
+    const fundXdr = await buildTravelerFundTx(BigInt(booking.id), session.wallet);
     return { bookingId: booking.id, price, payBefore, fundXdr, alreadyPaid: false, offer };
   } catch (err) {
     await database.update(bookings).set({ status: "failed", updatedAt: new Date() }).where(eq(bookings.id, booking.id));

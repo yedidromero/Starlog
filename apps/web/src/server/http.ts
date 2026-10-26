@@ -10,8 +10,8 @@ export function json(data: unknown, init?: ResponseInit) {
   return new NextResponse(body, { ...init, headers: { "Content-Type": "application/json", ...init?.headers } });
 }
 
-// Token contracts reject transfers the sender can't cover with error #10
-// (BalanceError) or a "balance" message; show that as what it is.
+// During fund(), the token contract uses error #10 for a balance below zero.
+// Escrow's create_booking() also has an unrelated #10, so scope this to fund.
 const INSUFFICIENT = /Error\(Contract, #10\)|insufficient|balance is not sufficient|not enough balance/i;
 
 /**
@@ -24,8 +24,11 @@ export function errorResponse(err: unknown) {
   }
   console.error(err);
   if (err instanceof ChainError) {
-    if (INSUFFICIENT.test(err.message)) {
-      return json({ error: "Saldo insuficiente para completar el pago.", code: "insufficient_balance" }, { status: 402 });
+    if (err.message.startsWith("fund simulation:") && INSUFFICIENT.test(err.message)) {
+      return json(
+        { error: "Tu wallet no tiene saldo suficiente en la moneda elegida. Añade fondos o elige otra moneda y vuelve a intentar.", code: "insufficient_balance" },
+        { status: 402 },
+      );
     }
     return json(
       { error: "No pudimos completar la operación en la red Stellar. Inténtalo de nuevo en unos minutos.", code: "chain_error" },

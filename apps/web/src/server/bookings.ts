@@ -14,7 +14,7 @@ export class BookingError extends Error {
   }
 }
 
-async function buildTravelerFundTx(bookingId: bigint, wallet: string) {
+export async function buildTravelerFundTx(bookingId: bigint, wallet: string) {
   try {
     return await chain.buildFundTx(bookingId, wallet);
   } catch (err) {
@@ -22,9 +22,9 @@ async function buildTravelerFundTx(bookingId: bigint, wallet: string) {
     // transaction on their behalf. Surface this expected setup step to the UI.
     if (err instanceof Error && /account not found:/i.test(err.message)) {
       throw new BookingError(
-        "Your Pollar wallet is not active on Stellar Testnet yet. Activate it, then retry your purchase.",
+        "Tu wallet aún no aparece en Stellar Testnet. Si acabas de activarla, espera unos segundos y vuelve a intentar.",
         409,
-        "wallet_not_activated",
+        "wallet_not_ready",
       );
     }
     throw err;
