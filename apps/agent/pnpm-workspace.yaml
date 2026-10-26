@@ -1,0 +1,4 @@
+allowBuilds:
+  '@livekit/blingfire': true
+  '@livekit/local-inference': true
+  esbuild: true

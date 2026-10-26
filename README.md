@@ -1,14 +1,20 @@
 # Starlog
 
-Proyecto principal de reservas y pagos de viaje sobre Stellar testnet. Este repositorio contiene los contratos Soroban, el backend de reservas, la integración con Duffel sandbox, el MCP de Estela y el perfil del viajero.
+Repositorio principal de Starlog: búsqueda de viajes y actividades, asistente por texto y voz, reservas de prueba y pagos en Stellar testnet.
 
-## Dónde está cada parte
+## Aplicaciones
 
-- `apps/web`: interfaz de viajes, perfil, autenticación con Pollar y API de reservas.
-- `mcp`: herramientas del agente de Estela y configuración de su wallet de testnet. Véase [la guía del MCP](mcp/README.md).
-- `contracts` y `packages`: contratos Soroban y bindings TypeScript.
-- `PLAN.md`: arquitectura y estado de la integración.
+| Ruta | Función |
+| --- | --- |
+| `apps/web` | Portal de reservas, perfil del viajero, autenticación con Pollar y backend de pagos. |
+| `apps/guide-web` | Interfaz editorial y asistente LiveKit que se probaba en `localhost:3001`. |
+| `apps/agent` | Worker LiveKit para conversaciones por voz y texto. |
+| `mcp` | Herramientas de Estela para búsquedas, cotizaciones y pagos de prueba. |
+| `contracts`, `packages` | Contratos Soroban y bindings TypeScript. |
+| `knowledge` | Guías de Madrid, Valencia y Barcelona. |
 
-La interfaz editorial y el agente de voz/texto LiveKit también están en [Starlog web y agente](https://github.com/yedidromero/stellar-workshop-spain), cuya rama principal contiene solo el proyecto Starlog.
+## Desarrollo local
 
-Los pagos de Stellar se hacen en testnet y las ofertas de Duffel se consultan en sandbox. Configura las variables según `apps/web/.env.example` y mantén `.env.local` y las claves de wallet fuera de Git.
+Cada aplicación tiene sus propias dependencias y variables de entorno. Usa [`apps/guide-web/README.md`](apps/guide-web/README.md) para ejecutar la interfaz y el agente; usa [`mcp/README.md`](mcp/README.md) para configurar el MCP de Estela. Las plantillas `.env.example` indican las variables requeridas. Guarda claves, tokens y wallets solo en `.env.local`, que está excluido de Git.
+
+Los pagos usan Stellar testnet y Duffel opera en sandbox. El catálogo de Musement requiere credenciales de partner para probar pedidos; las tarjetas y entradas reales no forman parte del flujo de prueba.
