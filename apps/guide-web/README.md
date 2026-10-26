@@ -9,7 +9,7 @@ En `apps/guide-web`:
 ```powershell
 Copy-Item .env.example .env.local
 pnpm install
-pnpm dev -- -p 3001
+pnpm exec next dev -p 3001
 ```
 
 En `apps/agent`, en otra terminal:
@@ -17,6 +17,7 @@ En `apps/agent`, en otra terminal:
 ```powershell
 Copy-Item .env.example .env.local
 pnpm install
+$env:NODE_OPTIONS='--use-system-ca' # Windows: usar certificados del sistema para LiveKit Cloud
 pnpm dev
 ```
 
