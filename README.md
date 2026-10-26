@@ -1,65 +1,114 @@
 # Starlog
 
-**Viaja pagando como quieras.** Starlog conecta viajes a eventos, pagos en Stellar y herramientas para que un agente de viajes pueda buscar y reservar en nombre del usuario.
+**Travel and meet, pay your way.**
 
-> Este README describe el checkout principal de [yedidromero/Starlog](https://github.com/yedidromero/Starlog). No publica ni modifica el repositorio remoto. La integración actual usa Pollar, Soroban, Duffel y MCP en **Stellar Testnet**.
+Starlog brings together travel to community events, Stellar payments, and an AI travel assistant. This repository contains the main web app and backend, Soroban contracts, TypeScript contract bindings, and an MCP server for AI clients.
 
-## Problema y solución
+> The current deployment and demo use **Stellar Testnet** and **Duffel sandbox** credentials. This is not a production booking or card-payment service.
 
-Organizar un viaje a un evento implica coordinar vuelos, entradas, pagos y comunidad desde servicios separados. Starlog reúne búsqueda de eventos y vuelos, cotización de viaje, custodia del pago en un contrato Soroban y reserva del vuelo mediante Duffel. El usuario puede autenticarse con Pollar y pagar con activos de Stellar.
+## The problem
 
-## Arquitectura
+Travelers have to coordinate event discovery, flights, tickets, payment, and local community across separate services. Starlog connects those steps: users can discover events and flights, get a package quote, pay through a Soroban escrow, and request a flight booking through Duffel.
+
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| apps/web | Next.js web app and server routes for authentication, events, flight search, quotes, bookings, escrow, and traveler data. |
+| mcp | MCP server that exposes travel tools to compatible AI clients over stdio. |
+| contracts | Soroban contracts for escrow, Estela Pass, Stamps, and integration work. |
+| packages | TypeScript bindings for the deployed Soroban contracts. |
+| deploy/testnet.json | Testnet network settings, contract and asset IDs, role addresses, and smoke-test transaction links. |
+
+The code retains some internal Estela names (for example, contract IDs and MCP tool names); those refer to Starlog services in this repository.
+
+## Architecture and Stellar integration
 
 ~~~mermaid
 flowchart LR
-  U[Persona viajera] --> W[Web Next.js]
-  U --> P[Pollar: inicio de sesión y wallet]
-  W --> DB[(Supabase / PostgreSQL)]
-  W --> D[Duffel API: vuelos y reservas]
-  W --> S[Stellar RPC + Horizon]
-  S --> E[Estela Escrow / Soroban]
-  S --> PA[Estela Pass y Stamps]
-  A[Cliente MCP / agente IA] --> M[Servidor Starlog MCP]
-  M --> W
-  M --> X[x402: cobro de consultas en USDC]
-  X --> S
+  T[Traveler] --> WEB[Next.js web app]
+  T --> POL[Pollar sign-in and wallet]
+  WEB --> DB[(Supabase PostgreSQL)]
+  WEB --> DUF[Duffel API sandbox]
+  WEB --> RPC[Stellar RPC and Horizon]
+  RPC --> ESC[Escrow Soroban contract]
+  RPC --> PASS[Estela Pass and Stamps]
+  AI[AI client] --> MCP[Starlog MCP server]
+  MCP --> WEB
+  MCP --> X402[x402 USDC payments]
+  X402 --> RPC
 ~~~
 
-- **Web y backend:** apps/web es la aplicación Next.js. Sus rutas de servidor gestionan sesiones SEP-10, acceso a Supabase, búsqueda y reserva de vuelos, cotizaciones y pagos.
-- **Wallet del viajero:** Pollar proporciona inicio de sesión y wallet desde el navegador. La clave publicable de Pollar selecciona Testnet; el frontend firma las acciones de wallet.
-- **Agente y MCP:** mcp expone herramientas por el protocolo MCP. Un cliente compatible (por ejemplo, Claude Code) se conecta por stdio. El servidor MCP mantiene una wallet de agente separada y llama al backend web.
-- **APIs de la aplicación:** las rutas principales incluyen /api/events, /api/flights/search y /api/bookings. Las rutas /api/agent/events, /api/agent/flights/search y /api/agent/quotes sirven al agente; las dos últimas cobran por x402 en USDC de Testnet.
-- **Duffel:** proveedor API de búsqueda y reserva de vuelos; **no es el agente ni una wallet**. El token de prueba permite usar el flujo sandbox. Las órdenes se pagan desde el saldo de Duffel configurado para Starlog.
-- **Soroban:** contracts contiene los contratos y packages sus bindings TypeScript. deploy/testnet.json registra los IDs y activos desplegados en Testnet.
-- **Base de datos:** Supabase ofrece PostgreSQL y claves para las funciones del servidor.
-- **Anchors y tarjetas:** este checkout no integra un Anchor de Stellar ni un proveedor de pago con tarjeta. Las monedas del MVP son activos de Stellar; no hay conversión fiat ni cobro real con tarjeta en el código descrito aquí.
-- **LiveKit:** no hay un servicio LiveKit en este checkout. La integración de agente que sí está incluida es MCP.
+- **Wallet and authentication:** Pollar handles sign-in and the traveler wallet in the browser. The Pollar publishable key selects Stellar Testnet. SEP-10 is used for Stellar wallet authentication.
+- **Escrow:** the Soroban escrow contract holds a booking payment and supports release or refund according to the booking flow.
+- **Pass and Stamps:** the other Soroban contracts support membership benefits, experience points, and event stamps.
+- **AI tools:** the MCP server uses a separate Stellar account for agent payments and signatures. It calls the web backend; it is not the traveler's Pollar wallet.
+- **Duffel:** Duffel is the flight search and booking API provider, **not the AI agent or a wallet**. The agent interface in this repository is MCP. Duffel test tokens use its sandbox; orders are paid from Starlog's Duffel balance.
+- **Application APIs:** the web app includes routes such as /api/events, /api/flights/search, and /api/bookings. Agent routes include /api/agent/events, /api/agent/flights/search, and /api/agent/quotes. Flight searches and quotes use x402 micropayments on Testnet.
+- **Data and network APIs:** Supabase provides PostgreSQL and project API keys. Soroban contract calls use Stellar RPC; account and asset lookups use Horizon.
+- **Anchors and cards:** this checkout does not integrate a Stellar Anchor, a fiat on/off-ramp, or a card-payment provider. USDC, EURC, and XLM are Stellar assets; the app does not convert fiat or charge a real card.
+- **LiveKit:** there is no LiveKit service in this checkout. The included AI-agent integration is MCP.
 
-## Requisitos
+## Stellar Testnet contracts and assets
 
-- Node.js y npm.
-- Un proyecto Supabase con PostgreSQL.
-- Una aplicación Pollar configurada para Stellar Testnet.
-- Un token de prueba de Duffel y saldo de sandbox para crear órdenes.
-- Para probar transacciones: acceso a Stellar Testnet y activos de prueba USDC, EURC o XLM.
-- Las claves de servidor correspondientes a los roles ya configurados en los contratos (estela-admin y estela-backend). No están publicadas en el repositorio; deben entregarlas de forma segura quienes administran el despliegue. No sirven claves inventadas que no tengan esos roles.
+The deployment file at [deploy/testnet.json](deploy/testnet.json) is the source of truth. The contracts and asset contracts below are **Testnet-only**.
 
-## Instalación local
+### Soroban contracts
 
-Clona el repositorio principal y entra en la carpeta:
+| Contract | Testnet contract ID |
+|---|---|
+| Escrow (estelaEscrow) | CDUARFKLW2YDKWIUZAAFY2BQCWOJU46H6NVY4ZKHRPLTSDTHYPZAHCTD |
+| Pass (estelaPass) | CB6ENR37I5ZIGRAWHTYBTWI4ZCOTZKK2I75CLLHCDIUTP3QG4VO2WL6S |
+| Stamps (estelaStamps) | CDQQ7PKXRNOYZUW47USR6OJCODKPH45OCYRODEMYHO7LJZDO7Y2HF7ZD |
+
+### Payment assets
+
+| Asset | Testnet SAC contract ID | Classic issuer |
+|---|---|---|
+| USDC | CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA | GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5 |
+| EURC | CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ | GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO |
+| XLM | CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | Native Stellar asset |
+
+Do not use these IDs or issuers as Mainnet configuration. The current web environment defaults are:
+
+- Soroban RPC: https://soroban-testnet.stellar.org
+- Horizon: https://horizon-testnet.stellar.org
+- Network passphrase: Test SDF Network ; September 2015
+
+## Requirements
+
+Install these tools and create the required service accounts before running the app:
+
+1. **Git** to clone the public repository.
+2. **Node.js 20 LTS and npm** to install and run the web app and MCP server.
+3. **Supabase** project with PostgreSQL for the app database.
+4. **Pollar** application configured for Stellar Testnet.
+5. **Duffel** developer account and a test-mode API token. Orders also require available Duffel sandbox balance.
+6. **Testnet funds** for the Pollar traveler wallet and the MCP agent wallet: XLM from Stellar Friendbot and USDC/EURC from the [Circle Testnet Faucet](https://faucet.circle.com/).
+7. The server signing keys that already hold the deployed contract roles estela-admin and estela-backend. Obtain these securely from the deployment owner. New random keys will not have those roles.
+
+You do not need Rust or the Stellar CLI to run the existing web app and MCP server. Those are only needed when changing, building, or redeploying the Rust contracts.
+
+## Installation and local setup
+
+Clone the main repository:
 
 ~~~bash
 git clone https://github.com/yedidromero/Starlog.git
 cd Starlog
 ~~~
 
-Copia la plantilla de configuración y completa los valores indicados en la siguiente sección. En PowerShell:
+### 1. Configure the web app
+
+Copy the committed template to a local-only environment file. In PowerShell:
 
 ~~~powershell
 Copy-Item apps/web/.env.example apps/web/.env.local
 ~~~
 
-Instala dependencias, aplica las migraciones de base de datos y arranca la web:
+Open apps/web/.env.local and fill in the values listed below. Copy the Testnet contract IDs and asset settings from deploy/testnet.json. Do not commit .env.local or put server secrets in browser-visible variables.
+
+Install dependencies, apply the database migrations, and start Next.js:
 
 ~~~bash
 cd apps/web
@@ -68,62 +117,28 @@ npm run db:migrate
 npm run dev
 ~~~
 
-Abre [http://localhost:3000](http://localhost:3000). npm ci ejecuta el script postinstall, que compila los bindings locales de los contratos. Las migraciones usan DATABASE_MIGRATION_URL (conexión directa o pool de sesión); la aplicación usa DATABASE_URL (pool de transacciones).
+Open http://localhost:3000. The postinstall script builds the local TypeScript contract bindings. The app uses DATABASE_URL for the transaction pool; Drizzle migrations use DATABASE_MIGRATION_URL, normally a direct/session connection.
 
-### Variables de entorno de la web
+### 2. Configure Pollar
 
-Rellena apps/web/.env.local a partir de [apps/web/.env.example](apps/web/.env.example). Usa valores de Testnet y no subas ese archivo a Git.
+1. Create or configure the app in the [Pollar dashboard](https://dashboard.pollar.xyz/) and select Stellar Testnet.
+2. Copy the **publishable Testnet key** from Build → API Keys to NEXT_PUBLIC_POLLAR_PUBLISHABLE_KEY. Testnet keys use the pub_testnet_ prefix.
+3. In Build → Domains, allow http://localhost:3000 and add the OAuth callback http://localhost:3000/oauth/callback.
+4. Start the web app and sign in. Pollar creates or connects the traveler's wallet.
+5. Copy that wallet's **public Stellar address**. Fund it with test XLM from [Stellar Friendbot](https://developers.stellar.org/docs/build/guides/freighter/connect-testnet), and test USDC/EURC from [Circle Testnet Faucet](https://faucet.circle.com/). Add or approve the asset trustline in the wallet if required.
 
-| Variable | Uso |
-|---|---|
-| SUPABASE_URL | URL del proyecto Supabase. |
-| SUPABASE_PUBLISHABLE_KEY | Clave publicable de Supabase. |
-| SUPABASE_SECRET_KEY | Clave secreta de servidor; evita la protección RLS. Nunca usar en el navegador. |
-| SUPABASE_JWKS_URL | Endpoint JWKS del proyecto Supabase. |
-| DATABASE_URL | PostgreSQL para la aplicación, normalmente pooler de transacciones, puerto 6543. |
-| DATABASE_MIGRATION_URL | PostgreSQL para migraciones, conexión directa o pool de sesión, normalmente puerto 5432. |
-| SESSION_SECRET | Secreto aleatorio de al menos 32 caracteres para firmar sesiones. |
-| SEP10_SIGNING_SECRET | Clave Stellar S... para firmar desafíos SEP-10. No necesita fondos y debe ser distinta de la clave admin. |
-| WEB_AUTH_DOMAIN, HOME_DOMAIN | Dominio autorizado; en local, ambos pueden ser localhost:3000. |
-| STELLAR_NETWORK_PASSPHRASE | En Testnet: Test SDF Network ; September 2015. |
-| STELLAR_RPC_URL | RPC de Soroban; en Testnet: https://soroban-testnet.stellar.org. |
-| ESCROW_CONTRACT_ID, PASS_CONTRACT_ID, STAMPS_CONTRACT_ID | IDs de los contratos en deploy/testnet.json. |
-| USDC_CONTRACT_ID, EURC_CONTRACT_ID, XLM_CONTRACT_ID | IDs de los contratos SAC de los activos en deploy/testnet.json. |
-| ESCROW_ADMIN_SECRET | Clave S... del rol estela-admin; solo servidor. |
-| BACKEND_SECRET | Clave S... del rol estela-backend, emisor de Stamps y awarder de Pass; solo servidor. |
-| DUFFEL_TOKEN | Token de Duffel. Para sandbox usa el token de prueba duffel_test_...; solo servidor. |
-| X402_PAY_TO | Dirección pública G... que recibe los micropagos USDC de consultas del agente; debe tener trustline USDC. |
-| CRON_SECRET | Secreto aleatorio de al menos 32 caracteres para proteger rutas de cron. |
-| NEXT_PUBLIC_POLLAR_PUBLISHABLE_KEY | Clave publicable Pollar de Testnet, normalmente con prefijo pub_testnet_. Es la única clave de Pollar que va al frontend. |
-| USDC_ISSUER, EURC_ISSUER | Emisores clásicos; los valores por defecto corresponden a Circle Testnet. Cambiar solo si se configura otra red/emisor. |
-| HORIZON_URL | Opcional; por defecto usa https://horizon-testnet.stellar.org. |
-| X402_FACILITATOR_URL, X402_NETWORK | Opcionales; por defecto https://x402.org/facilitator y stellar:testnet. El facilitador de Testnet no requiere una API key. |
-| FLIGHT_SERVICE_FEE, DEMO_XLM_PER_FIAT | Opcionales, con valores de demo por defecto definidos en .env.example. La equivalencia XLM es una tasa fija de demostración, no un oráculo de precios. |
+The publishable key is intended for the frontend. Never expose any Pollar secret key or a wallet's secret seed.
 
-La plantilla también fija valores por defecto para la passphrase y el RPC de Testnet. Completa todas las variables requeridas por apps/web/src/server/env.ts antes de probar rutas del backend.
+### 3. Configure Duffel sandbox
 
-Para generar secretos aleatorios de sesión y cron puedes usar Node:
+1. Create a test-mode access token in Duffel; see the [Duffel test-mode guide](https://duffel.com/docs/api/overview/test-mode/duffel-airways).
+2. Put the token, which starts with duffel_test_, in DUFFEL_TOKEN in apps/web/.env.local.
+3. Keep this token server-side; do not name it NEXT_PUBLIC_DUFFEL_TOKEN.
+4. Check that the Duffel sandbox account has balance for order creation. A sandbox order is not a real airline ticket.
 
-~~~bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
-~~~
+### 4. Configure and fund the MCP agent
 
-### Configurar Pollar
-
-1. Crea/configura la aplicación en el [dashboard de Pollar](https://dashboard.pollar.xyz/) y selecciona Stellar Testnet.
-2. Copia la clave **publicable de Testnet** a NEXT_PUBLIC_POLLAR_PUBLISHABLE_KEY. No pongas una clave secreta de Pollar en variables NEXT_PUBLIC_*.
-3. En **Build → Domains**, permite http://localhost:3000 y registra el callback http://localhost:3000/oauth/callback.
-4. Inicia sesión en Starlog para que Pollar cree/conecte la wallet de la persona. Copia su dirección pública Stellar y envíale XLM de prueba desde Friendbot y USDC/EURC desde Circle Testnet Faucet; nunca compartas su clave privada.
-
-### Configurar Duffel
-
-1. Crea un token desde el modo de prueba/desarrollador de Duffel; consulta la [guía oficial de test mode](https://duffel.com/docs/api/overview/test-mode/duffel-airways).
-2. Guarda el token duffel_test_... en DUFFEL_TOKEN dentro de apps/web/.env.local.
-3. Comprueba que la cuenta de sandbox dispone de saldo para el flujo de órdenes. Las ofertas y reservas de prueba no equivalen a un billete real.
-
-## MCP y wallet del agente
-
-El servidor MCP es distinto de la wallet Pollar del viajero. Mantiene una cuenta Stellar independiente para pagar consultas x402 y firmar acciones del agente. Ejecuta la web y su backend primero; después, desde otra terminal:
+Keep the web app running on localhost:3000. Open a second terminal from the repository root and run:
 
 ~~~bash
 cd mcp
@@ -132,56 +147,110 @@ npm run setup:wallet
 npm run setup:testnet
 ~~~
 
-setup:wallet genera una wallet nueva y guarda ESTELA_AGENT_SECRET en mcp/.env.local sin imprimir el secreto. setup:testnet usa Friendbot para darle XLM de Testnet y crea la trustline USDC. El script muestra la dirección pública. Envía USDC de prueba a esa dirección desde [Circle Testnet Faucet](https://faucet.circle.com/) para habilitar las consultas de pago. Verifica que ESTELA_URL en mcp/.env.local apunte a la web local (http://localhost:3000).
+- setup:wallet generates a dedicated Stellar test wallet and writes its secret to the ignored mcp/.env.local file without printing it.
+- setup:testnet funds the account with native XLM using Friendbot and creates its USDC trustline. It prints the public address.
+- Send test USDC to that public address from the [Circle Testnet Faucet](https://faucet.circle.com/) to pay for x402 searches and quotes.
+- The generated ESTELA_URL points to http://localhost:3000. Keep it set to the running web backend.
 
-Arranca el servidor MCP para probarlo manualmente:
+Start the MCP server manually:
 
 ~~~bash
 node --env-file=.env.local src/index.mjs
 ~~~
 
-Para conectarlo a un host MCP, configura node como comando y pasa como argumentos --env-file=/RUTA/ABSOLUTA/Starlog/mcp/.env.local y /RUTA/ABSOLUTA/Starlog/mcp/src/index.mjs. La ruta debe ser local al equipo y la configuración del host no debe compartirse: contiene acceso a la wallet del agente.
+To connect an MCP host, configure a stdio server with command node and these arguments (replace the paths with absolute paths on your computer):
 
-| Herramienta MCP | Función | Coste en Testnet |
-|---|---|---|
-| buscar_eventos | Lista eventos, ciudad, aeropuerto, fecha y precio. | Gratis |
-| buscar_vuelos | Busca ofertas Duffel ordenadas por precio. | 0,01 USDC por consulta (x402) |
-| cotizar | Calcula vuelo, tarifa, entrada opcional y descuento Estela Pass. | 0,005 USDC (x402) |
-| reservar | Paga desde la wallet del agente al escrow y solicita la reserva a Duffel. | Importe cotizado en el activo elegido; consume fondos de Testnet |
-| mi_estela_pass | Consulta nivel, XP, descuento y entradas del agente. | Gratis |
+~~~json
+{
+  "mcpServers": {
+    "starlog": {
+      "command": "node",
+      "args": [
+        "--env-file=/ABSOLUTE/PATH/TO/Starlog/mcp/.env.local",
+        "/ABSOLUTE/PATH/TO/Starlog/mcp/src/index.mjs"
+      ]
+    }
+  }
+}
+~~~
 
-Antes de llamar a reservar, revisa la cotización, moneda y datos del pasajero. La acción firma una transacción de Testnet y crea una orden en sandbox. Para las consultas x402 se necesita USDC de prueba; las reservas también pueden requerir XLM, EURC o USDC según la cotización. La wallet MCP no es la wallet de Pollar del usuario.
+On Windows, use absolute paths and escape backslashes in JSON. Keep this MCP host configuration private because it grants access to the agent wallet.
 
-## Stellar Testnet: contratos y activos
+### 5. Run the demo
 
-El archivo [deploy/testnet.json](deploy/testnet.json) es la fuente de verdad del despliegue. Los contratos Soroban son:
+1. Start the web app and open http://localhost:3000.
+2. Sign in with Pollar Testnet and fund the traveler's wallet.
+3. Start the MCP server and connect it from your MCP client.
+4. Try buscar_eventos first, then buscar_vuelos and cotizar.
+5. Use reservar only after checking the quote, currency, and passenger details. It signs a Testnet transaction and creates a Duffel sandbox order.
 
-| Contrato | ID Testnet |
+## Environment variables
+
+The full placeholder template is [apps/web/.env.example](apps/web/.env.example). Most server routes validate their configuration at runtime. Use Testnet values for this demo.
+
+| Variable | Required value / purpose |
 |---|---|
-| Escrow (estelaEscrow) | CDUARFKLW2YDKWIUZAAFY2BQCWOJU46H6NVY4ZKHRPLTSDTHYPZAHCTD |
-| Pass (estelaPass) | CB6ENR37I5ZIGRAWHTYBTWI4ZCOTZKK2I75CLLHCDIUTP3QG4VO2WL6S |
-| Stamps (estelaStamps) | CDQQ7PKXRNOYZUW47USR6OJCODKPH45OCYRODEMYHO7LJZDO7Y2HF7ZD |
+| SUPABASE_URL | Supabase project URL. |
+| SUPABASE_PUBLISHABLE_KEY | Supabase publishable API key. |
+| SUPABASE_SECRET_KEY | Supabase server secret key; bypasses RLS. Server only. |
+| SUPABASE_JWKS_URL | Supabase Auth JWKS URL, normally https://PROJECT_REF.supabase.co/auth/v1/.well-known/jwks.json. |
+| DATABASE_URL | PostgreSQL transaction-pool connection string, commonly port 6543. |
+| DATABASE_MIGRATION_URL | PostgreSQL direct/session connection string for migrations, commonly port 5432. |
+| SESSION_SECRET | Random string with at least 32 characters for session signing. |
+| SEP10_SIGNING_SECRET | Stellar S... key for SEP-10 challenges. It needs no funds and must not be the escrow admin key. |
+| WEB_AUTH_DOMAIN, HOME_DOMAIN | Use localhost:3000 for both in local development. |
+| STELLAR_NETWORK_PASSPHRASE | Testnet passphrase: Test SDF Network ; September 2015. |
+| STELLAR_RPC_URL | Soroban RPC URL; Testnet default is https://soroban-testnet.stellar.org. |
+| HORIZON_URL | Optional Horizon URL; Testnet default is https://horizon-testnet.stellar.org. |
+| ESCROW_CONTRACT_ID, PASS_CONTRACT_ID, STAMPS_CONTRACT_ID | Soroban contract IDs from deploy/testnet.json. |
+| USDC_CONTRACT_ID, EURC_CONTRACT_ID, XLM_CONTRACT_ID | Stellar Asset Contract (SAC) IDs from deploy/testnet.json. |
+| USDC_ISSUER, EURC_ISSUER | Optional classic issuers. Defaults in the app are the Circle Testnet issuers. |
+| ESCROW_ADMIN_SECRET | Secret S... key for the deployed estela-admin escrow role. Server only. |
+| BACKEND_SECRET | Secret S... key for the deployed estela-backend role (Stamps issuer and Pass awarder). Server only. |
+| DUFFEL_TOKEN | Duffel test token beginning duffel_test_. Server only. |
+| FLIGHT_SERVICE_FEE | Optional service fee per passenger in the offer currency; default is 10. |
+| DEMO_XLM_PER_FIAT | Optional fixed Testnet demo conversion for XLM packages; default is 1. It is not a live price oracle. |
+| X402_FACILITATOR_URL | Optional x402 facilitator; Testnet default is https://x402.org/facilitator. |
+| X402_NETWORK | Optional x402 network; Testnet default is stellar:testnet. |
+| X402_PAY_TO | Public G... Stellar address that receives agent micropayments in USDC; it needs a USDC trustline. |
+| CRON_SECRET | Random string with at least 32 characters to protect cron routes. |
+| NEXT_PUBLIC_POLLAR_PUBLISHABLE_KEY | Pollar Testnet publishable key, normally pub_testnet_...; safe to expose in the web bundle. |
 
-| Activo | Contrato SAC Testnet | Emisor clásico |
+Generate random session and cron secrets with Node:
+
+~~~bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+~~~
+
+SEP10_SIGNING_SECRET can be generated locally after npm ci:
+
+~~~bash
+node -e "console.log(require('@stellar/stellar-sdk').Keypair.random().secret())"
+~~~
+
+Do not generate replacement ESCROW_ADMIN_SECRET or BACKEND_SECRET values unless you are also authorized to update the deployed contract roles. Never commit secret keys, database passwords, or wallet seeds.
+
+## MCP tools and Testnet costs
+
+The MCP tool names are currently Spanish because they are exposed by the existing server implementation.
+
+| Tool | Purpose | Testnet cost |
 |---|---|---|
-| USDC | CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA | GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5 |
-| EURC | CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ | GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO |
-| XLM | CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | Nativo de Stellar |
+| buscar_eventos | List available events, cities, nearby airports, dates, and ticket prices. | Free |
+| buscar_vuelos | Search Duffel flight offers, cheapest first. | 0.01 USDC per call through x402. |
+| cotizar | Quote flight, service fee, optional event ticket, and Estela Pass discount. | 0.005 USDC through x402. |
+| reservar | Pay the quoted amount to escrow and request the Duffel sandbox booking. | The trip amount in the selected Testnet asset. |
+| mi_estela_pass | Read the agent's membership level, XP, discount, and tickets. | Free |
 
-**No uses estas direcciones como configuración de Mainnet.** El archivo de despliegue corresponde a Testnet; los secretos privados no forman parte del repo. Para obtener XLM de prueba usa [Stellar Friendbot](https://developers.stellar.org/docs/build/guides/freighter/connect-testnet); para USDC/EURC usa [Circle Testnet Faucet](https://faucet.circle.com/).
+The MCP wallet and the Pollar traveler wallet are separate accounts. Friendbot supplies test XLM; Circle's faucet supplies test USDC/EURC. The x402 Testnet facilitator sponsors fees for paid reads, but bookings consume Testnet assets. No Mainnet funds are needed for the demo.
 
-## Demo y evidencia on-chain
+## On-chain demo evidence
 
-1. Configura las variables, migra la base de datos y arranca la web en localhost:3000.
-2. Inicia sesión con Pollar Testnet y conecta una wallet con activos de prueba.
-3. Arranca el servidor MCP y prueba primero buscar_eventos, buscar_vuelos y cotizar.
-4. Prueba reservar solo con una cotización revisada y fondos de Testnet. La reserva usa Duffel sandbox y escrow Soroban.
+deploy/testnet.json records a Stellar Testnet smoke test dated October 25, 2026. The test booked a 10 XLM package, released 3 XLM to the organizer, and issued an event stamp.
 
-El despliegue registra una prueba de humo en Stellar Testnet del **25 de octubre de 2026**: creación de reserva, fondeo, liberación del escrow y emisión del sello de evento.
+- [Create booking transaction](https://stellar.expert/explorer/testnet/tx/e31d08e7b83af10a3a6af13c7bdf1d42b228e9ff5122ba2080973c24b7866ddc)
+- [Fund escrow transaction](https://stellar.expert/explorer/testnet/tx/eb1dbfe288be31a6d5ac04761aab955c8513f9525c5ade7230602a9aa71444de)
+- [Release escrow transaction](https://stellar.expert/explorer/testnet/tx/509f5d080135bc0facf907cca5caf65a8c5fee9cbcb4a1d7787a48c03975b881)
+- [Issue event stamp transaction](https://stellar.expert/explorer/testnet/tx/7d0878cffa820df99b59a4851650edb93f52cdfa085669ef9ddce2495c3c6fae)
 
-- [Crear reserva](https://stellar.expert/explorer/testnet/tx/e31d08e7b83af10a3a6af13c7bdf1d42b228e9ff5122ba2080973c24b7866ddc)
-- [Fondear escrow](https://stellar.expert/explorer/testnet/tx/eb1dbfe288be31a6d5ac04761aab955c8513f9525c5ade7230602a9aa71444de)
-- [Liberar pago](https://stellar.expert/explorer/testnet/tx/509f5d080135bc0facf907cca5caf65a8c5fee9cbcb4a1d7787a48c03975b881)
-- [Emitir sello del evento](https://stellar.expert/explorer/testnet/tx/7d0878cffa820df99b59a4851650edb93f52cdfa085669ef9ddce2495c3c6fae)
-
-Estas transacciones son evidencia de Testnet, no pagos ni reservas de Mainnet.
+These links are Testnet evidence only; they are not Mainnet payments or real travel bookings.
