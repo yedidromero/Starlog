@@ -46,7 +46,7 @@ const COPY = {
     tripsKicker: "SEIS FORMAS DE SALIR", tripsTitle: "Tu próximo destino.",
     tripsText: "Experiencias y eventos reales en Valencia, Barcelona y Madrid.",
     tripsNote: "Importes de muestra para el prototipo. Referencia visual 1 USDC ≈ 1 EUR; no es una cotización en vivo ni una reserva confirmada.",
-    from: "DESDE", payUSDC: "PAGAR CON USDC", payCard: "PAGAR CON TARJETA",
+    from: "DESDE", payUSDC: "CÓMO COMPRAR", payCard: "TICKETS OFICIALES",
     mapKicker: "ENCUENTRA A TU GENTE", mapTitle: "La ciudad también es tuya.",
     mapText: "Explora meetups y lugares reportados por la comunidad.",
     mapAll: "TODO", mapMeetups: "MEETUPS", mapMerchants: "COMERCIOS", citiesLabel: "CIUDADES",
@@ -70,10 +70,9 @@ const COPY = {
     ],
     escrowNote: "Flujo de producto previsto. Escrow y pagos aún requieren configurar el contrato y conectar el checkout.",
     footerLine: "Viaja pagando como quieras.", built: "CONSTRUIDO EN LA RED STELLAR",
-    checkoutTitle: "Este plan no admite pago con wallet",
-    checkoutSub: "Este precio es orientativo. La compra de este lugar se completa en su web oficial; los eventos Starlog publicados sí se pagan con Pollar.",
-    amount: "PRECIO DE REFERENCIA", checkoutButton: "VER EVENTOS CON PAGO POLLAR",
-    officialButton: "COMPRAR EN LA WEB OFICIAL",
+    checkoutTitle: "Este evento no se vende desde Starlog",
+    checkoutSub: "El importe es orientativo. Para conseguir una entrada, continúa en la web oficial. Pollar solo puede cobrar eventos publicados y vendidos por Starlog.",
+    amount: "PRECIO ORIENTATIVO", checkoutButton: "CONTINUAR A TICKETS OFICIALES",
     close: "CERRAR", openMenu: "Abrir menú", closeMenu: "Cerrar menú", guide: "Planifica tu próxima aventura con Starlog",
     selected: "LUGAR SELECCIONADO", locationList: "LUGARES EN EL MAPA", cryptoDirectory: "DIRECTORIO COMUNITARIO",
     eventInfo: "AGENDA OFICIAL",
@@ -89,7 +88,7 @@ const COPY = {
     tripsKicker: "SIX WAYS TO GO", tripsTitle: "Your next destination.",
     tripsText: "Real experiences and events in Valencia, Barcelona and Madrid.",
     tripsNote: "Sample amounts for this prototype. Visual reference 1 USDC ≈ 1 EUR; not a live quote or confirmed booking.",
-    from: "FROM", payUSDC: "PAY WITH USDC", payCard: "PAY BY CARD",
+    from: "FROM", payUSDC: "HOW TO BUY", payCard: "OFFICIAL TICKETS",
     mapKicker: "FIND YOUR PEOPLE", mapTitle: "The city is yours, too.",
     mapText: "Explore meetups and places reported by the community.",
     mapAll: "ALL", mapMeetups: "MEETUPS", mapMerchants: "MERCHANTS", citiesLabel: "CITIES",
@@ -113,10 +112,9 @@ const COPY = {
     ],
     escrowNote: "Planned product flow. Escrow and payments still need a configured contract and connected checkout.",
     footerLine: "Travel and meet, pay your way.", built: "BUILT ON THE STELLAR NETWORK",
-    checkoutTitle: "Wallet payment isn't available for this listing",
-    checkoutSub: "This is a reference price. Buy this experience through its official website; published Starlog events can be paid with Pollar.",
-    amount: "REFERENCE PRICE", checkoutButton: "SEE EVENTS THAT ACCEPT POLLAR",
-    officialButton: "BUY FROM THE OFFICIAL WEBSITE",
+    checkoutTitle: "This event isn't sold through Starlog",
+    checkoutSub: "This is an estimated price. Continue to the official website for a ticket. Pollar can only charge for events published and sold by Starlog.",
+    amount: "ESTIMATED PRICE", checkoutButton: "CONTINUE TO OFFICIAL TICKETS",
     close: "CLOSE", openMenu: "Open menu", closeMenu: "Close menu", guide: "Plan your next adventure with Starlog",
     selected: "SELECTED PLACE", locationList: "PLACES ON THE MAP", cryptoDirectory: "COMMUNITY DIRECTORY",
     eventInfo: "OFFICIAL AGENDA",
@@ -201,12 +199,6 @@ export default function Home() {
 
   const openCheckout = (trip: Trip) => {
     setCheckoutTrip(trip);
-  };
-
-  const goToWalletEvents = () => {
-    setCheckoutTrip(null);
-    document.getElementById("starlog-events")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    if (!user) window.setTimeout(() => openLoginModal(), 250);
   };
 
   const handleMeetupSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -421,9 +413,7 @@ export default function Home() {
             <p className="checkout-plan">{checkoutTrip.title[locale]}</p>
             <p className="checkout-sub">{c.checkoutSub}</p>
             <div className="checkout-amount"><span>{c.amount}</span><strong>{checkoutTrip.priceUSDC} USDC</strong><b>{checkoutTrip.priceEUR[locale]}</b></div>
-            <div className="checkout-security"><StarSeal /><span>REAL WALLET CHECKOUT · PUBLISHED STARLOG EVENTS</span></div>
-            <button className="hard-button button-copper checkout-submit" type="button" onClick={goToWalletEvents}>{c.checkoutButton} ↗</button>
-            <a className="checkout-official-link" href={checkoutTrip.url} target="_blank" rel="noreferrer">{c.officialButton} ↗</a>
+            <a className="hard-button button-copper checkout-submit" href={checkoutTrip.url} target="_blank" rel="noreferrer">{c.checkoutButton} ↗</a>
             <button className="modal-cancel" type="button" onClick={() => setCheckoutTrip(null)}>{c.close}</button>
           </section>
         </div>

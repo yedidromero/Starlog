@@ -31,7 +31,7 @@ type Purchase = { busy: boolean; message?: string; error?: string; errorCode?: s
 
 /** Upcoming events with a "buy ticket" flow: reserve, pay with Pollar, confirm. */
 export function EventsList({ signedIn, id, className }: { signedIn: boolean; id?: string; className?: string }) {
-  const { signAndSubmitTx, wallet } = usePollar();
+  const { signAndSubmitTx, wallet, openLoginModal } = usePollar();
   const [events, setEvents] = useState<EventItem[] | null>(null);
   const [purchases, setPurchases] = useState<Record<number, Purchase>>({});
 
@@ -50,7 +50,7 @@ export function EventsList({ signedIn, id, className }: { signedIn: boolean; id?
 
       let fundHash: string | undefined;
       if (started.fundXdr) {
-        track(event.id, { busy: true, message: "Confirma el pago en Pollar…" });
+        track(event.id, { busy: true, message: "Approve the payment in Pollar…" });
         const outcome = await signAndSubmitTx(started.fundXdr);
         if (outcome.status !== "success" && outcome.status !== "pending") {
           const detail = "details" in outcome ? outcome.details : undefined;
@@ -99,11 +99,11 @@ export function EventsList({ signedIn, id, className }: { signedIn: boolean; id?
                   {formatAmount(BigInt(event.ticketPrice))} {event.currency}
                 </span>
                 <button
-                  onClick={() => buy(event)}
-                  disabled={!signedIn || purchase?.busy}
+                  onClick={() => signedIn ? buy(event) : openLoginModal()}
+                  disabled={purchase?.busy}
                   className="event-card-buy"
                 >
-                  {signedIn ? "Buy ticket" : "Sign in to book"}
+                  {purchase?.busy ? "Waiting for Pollar…" : signedIn ? `Buy with ${event.currency} via Pollar` : "Sign in with Pollar to buy"}
                 </button>
               </div>
             )}
