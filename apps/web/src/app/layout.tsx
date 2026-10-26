@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@pollar/react/styles.css";
 import "./globals.css";
+import "./homepage.css";
 import "./mi-starlog/account.css";
 import { Providers } from "./providers";
 

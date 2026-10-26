@@ -30,7 +30,7 @@ type Started = {
 type Purchase = { busy: boolean; message?: string; error?: string };
 
 /** Upcoming events with a "buy ticket" flow: reserve, pay with Pollar, confirm. */
-export function EventsList({ signedIn }: { signedIn: boolean }) {
+export function EventsList({ signedIn, id, className }: { signedIn: boolean; id?: string; className?: string }) {
   const { signAndSubmitTx } = usePollar();
   const [events, setEvents] = useState<EventItem[] | null>(null);
   const [purchases, setPurchases] = useState<Record<number, Purchase>>({});
@@ -76,35 +76,35 @@ export function EventsList({ signedIn }: { signedIn: boolean }) {
   if (events === null) return <p className="text-sm opacity-70">Loading events…</p>;
 
   return (
-    <section id="viajes" className="w-full max-w-xl flex flex-col gap-4">
-      {events.length === 0 && <p className="text-sm opacity-70">There are no upcoming events.</p>}
+    <section id={id} className={className ?? "event-list"}>
+      {events.length === 0 && <p className="event-list-empty">There are no upcoming events.</p>}
 
       {events.map((event) => {
         const purchase = purchases[event.id];
         return (
-          <article key={event.id} className="rounded-xl border border-black/10 dark:border-white/15 p-4 flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">{event.title}</h2>
-            <p className="text-sm opacity-70">
+          <article key={event.id} className="event-card">
+            <h2 className="event-card-title">{event.title}</h2>
+            <p className="event-card-meta">
               {new Date(event.startsAt).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })} ·{" "}
               {[event.venue, event.city].filter(Boolean).join(", ")}
             </p>
-            {event.description && <p className="text-sm">{event.description}</p>}
+            {event.description && <p className="event-card-description">{event.description}</p>}
             {event.ticketPrice && (
-              <div className="flex items-center gap-3 mt-1">
-                <span className="font-medium">
+              <div className="event-card-purchase">
+                <span className="event-card-price">
                   {formatAmount(BigInt(event.ticketPrice))} {event.currency}
                 </span>
                 <button
                   onClick={() => buy(event)}
                   disabled={!signedIn || purchase?.busy}
-                  className="rounded-full bg-foreground text-background px-4 h-9 text-sm font-medium disabled:opacity-40"
+                  className="event-card-buy"
                 >
                   {signedIn ? "Buy ticket" : "Sign in to book"}
                 </button>
               </div>
             )}
-            {purchase?.message && <p className="text-sm">{purchase.message}</p>}
-            {purchase?.error && <p className="text-sm text-red-600">{purchase.error}</p>}
+            {purchase?.message && <p className="event-purchase-result">{purchase.message}</p>}
+            {purchase?.error && <p className="event-purchase-error">{purchase.error}</p>}
             {signedIn && event.airport && (
               <FlightPackage
                 event={event}

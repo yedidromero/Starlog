@@ -73,17 +73,17 @@ export function LoginPanel({ user, onUserChange, appearance = "default" }: Props
 
   if (appearance === "home") {
     if (user) {
-      return <Link href="/mi-starlog" className="rounded-full border border-black/15 dark:border-white/20 px-5 py-3 text-sm font-medium">MY STARLOG</Link>;
+      return <Link href="/mi-starlog" className="account-shortcut" aria-label="Open My Starlog"><span>ST</span><b>MY STARLOG</b></Link>;
     }
     return (
-      <div className="flex flex-col items-center gap-3 text-sm">
+      <div className="home-login-control">
         {!isAuthenticated ? (
-          <button onClick={openLoginModal} className="rounded-full bg-foreground text-background px-6 h-12 font-medium" type="button">SIGN IN</button>
+          <button onClick={openLoginModal} className="wallet-connect-button" type="button"><span>SIGN IN</span><span className="wallet-network-label">STELLAR</span></button>
         ) : (
-          <p>{busy ? "Connecting your Starlog account…" : "Connecting your account…"}</p>
+          <p className="home-login-status">{busy ? "Connecting your Starlog account…" : "Connecting your account…"}</p>
         )}
-        {error && <p className="text-red-600 max-w-md text-center">{error} <button onClick={linkSession} className="underline">RETRY</button></p>}
-        {pollarError && <p className="text-red-600 max-w-md text-center">{pollarError}</p>}
+        {error && <p className="home-login-error" role="alert">{error} <button onClick={linkSession}>RETRY</button></p>}
+        {pollarError && <p className="home-login-error" role="alert">{pollarError}</p>}
       </div>
     );
   }
