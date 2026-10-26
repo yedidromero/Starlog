@@ -27,7 +27,6 @@ flowchart LR
   Guide --> Duffel[Duffel sandbox]
   Agent --> Web[Booking portal and backend]
   MCP --> Web
-  Web --> Database[(Supabase / PostgreSQL)]
   Guide --> MariaDB[(MariaDB)]
   Web --> Stellar[Stellar Testnet]
   Stellar --> Soroban[Soroban contracts]
@@ -57,7 +56,7 @@ Each app has its own dependencies and environment variables. Copy the relevant .
 
 ### Booking portal and backend
 
-Configure apps/web/.env.local using [apps/web/.env.example](apps/web/.env.example). It includes Supabase, database, Pollar, Duffel, and Stellar settings. Use the contract IDs in [deploy/testnet.json](deploy/testnet.json).
+Configure apps/web/.env.local using [apps/web/.env.example](apps/web/.env.example). It includes Pollar, Duffel, and Stellar settings. Use the contract IDs in [deploy/testnet.json](deploy/testnet.json).
 
 In PowerShell, from the repository root:
 
@@ -65,12 +64,11 @@ In PowerShell, from the repository root:
 cd apps/web
 Copy-Item .env.example .env.local
 npm ci
-npm run db:migrate
 $env:PORT = "3002"
 npm run dev
 ~~~
 
-Fill in the environment values before running the migration. The app uses Supabase PostgreSQL.
+Fill in the environment values before starting the app.
 
 ### Traveler guide
 
