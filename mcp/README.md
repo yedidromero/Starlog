@@ -18,9 +18,18 @@ and signs escrow payments itself. On testnet it needs a USDC trustline + test US
 ## Run
 
 ```bash
-npm install
-ESTELA_AGENT_SECRET=S... ESTELA_URL=http://localhost:3000 npm start
+npm ci
+npm run setup:wallet
+npm run setup:testnet
+node --env-file=.env.local src/index.mjs
 ```
+
+`setup:wallet` writes a new secret to the ignored `mcp/.env.local` without printing it.
+`setup:testnet` uses Friendbot and creates the USDC trustline; fund the public
+address with **testnet USDC** through the Circle faucet before calling paid tools.
+Set `ESTELA_URL` in that file to the running Estela backend (for example,
+`http://localhost:3002`). The agent's secret must stay local and must not be
+committed to Git.
 
 ## Add to Claude Code
 
@@ -37,6 +46,8 @@ wallet holding real funds.
 ## Test
 
 ```bash
-ESTELA_AGENT_SECRET=S... node test/e2e.mjs                # free + paid reads (~0.015 USDC)
-ESTELA_AGENT_SECRET=S... RUN_BOOKING=1 node test/e2e.mjs  # also books a flight (testnet XLM)
+node --env-file=.env.local test/e2e.mjs                # free + paid reads (~0.015 USDC)
+RUN_BOOKING=1 node --env-file=.env.local test/e2e.mjs  # also books a flight (testnet XLM)
 ```
+
+In PowerShell, set `$env:RUN_BOOKING='1'` before running the second command.

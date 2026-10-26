@@ -9,6 +9,8 @@
   },
   "scripts": {
     "start": "node src/index.mjs",
+    "setup:wallet": "node scripts/setup-test-wallet.mjs",
+    "setup:testnet": "node --env-file=.env.local scripts/setup-testnet.mjs",
     "test:e2e": "node test/e2e.mjs"
   },
   "dependencies": {
