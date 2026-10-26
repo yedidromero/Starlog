@@ -45,8 +45,8 @@ const COPY = {
     seeTrips: "VER VIAJES", howButton: "CÓMO FUNCIONA",
     tripsKicker: "SEIS FORMAS DE SALIR", tripsTitle: "Tu próximo destino.",
     tripsText: "Experiencias y eventos reales en Valencia, Barcelona y Madrid.",
-    tripsNote: "Importes de muestra para el prototipo. Referencia visual 1 USDC ≈ 1 EUR; no es una cotización en vivo ni una reserva confirmada.",
-    from: "DESDE", payUSDC: "CÓMO COMPRAR", payCard: "TICKETS OFICIALES",
+    tripsNote: "Compra demo con USDC en Stellar Testnet. El ticket interno de Starlog no es válido para entrar al recinto.",
+    from: "DESDE", payUSDC: "PAGAR CON USDC · TESTNET", payCard: "TICKETS OFICIALES",
     mapKicker: "ENCUENTRA A TU GENTE", mapTitle: "La ciudad también es tuya.",
     mapText: "Explora meetups y lugares reportados por la comunidad.",
     mapAll: "TODO", mapMeetups: "MEETUPS", mapMerchants: "COMERCIOS", citiesLabel: "CIUDADES",
@@ -68,11 +68,11 @@ const COPY = {
       ["El dinero queda en custodia", "El contrato Soroban libera el pago según las condiciones del viaje."],
       ["Viaja y conoce a tu comunidad", "Llega con un plan, personas y lugares que descubrir."],
     ],
-    escrowNote: "Flujo de producto previsto. Escrow y pagos aún requieren configurar el contrato y conectar el checkout.",
+    escrowNote: "La compra demo usa Pollar y Soroban en Stellar Testnet. Los tickets son internos de Starlog y no los reconoce el proveedor del evento.",
     footerLine: "Viaja pagando como quieras.", built: "CONSTRUIDO EN LA RED STELLAR",
-    checkoutTitle: "Este evento no se vende desde Starlog",
-    checkoutSub: "El importe es orientativo. Para conseguir una entrada, continúa en la web oficial. Pollar solo puede cobrar eventos publicados y vendidos por Starlog.",
-    amount: "PRECIO ORIENTATIVO", checkoutButton: "CONTINUAR A TICKETS OFICIALES",
+    checkoutTitle: "COMPRA DE DEMOSTRACIÓN · TESTNET",
+    checkoutSub: "Paga con USDC de prueba en Pollar para recibir un ticket demo de Starlog. No es una entrada válida para el recinto ni una compra a la taquilla oficial.",
+    amount: "IMPORTE DEMO",
     close: "CERRAR", openMenu: "Abrir menú", closeMenu: "Cerrar menú", guide: "Planifica tu próxima aventura con Starlog",
     selected: "LUGAR SELECCIONADO", locationList: "LUGARES EN EL MAPA", cryptoDirectory: "DIRECTORIO COMUNITARIO",
     eventInfo: "AGENDA OFICIAL",
@@ -87,8 +87,8 @@ const COPY = {
     seeTrips: "EXPLORE TRIPS", howButton: "HOW IT WORKS",
     tripsKicker: "SIX WAYS TO GO", tripsTitle: "Your next destination.",
     tripsText: "Real experiences and events in Valencia, Barcelona and Madrid.",
-    tripsNote: "Sample amounts for this prototype. Visual reference 1 USDC ≈ 1 EUR; not a live quote or confirmed booking.",
-    from: "FROM", payUSDC: "HOW TO BUY", payCard: "OFFICIAL TICKETS",
+    tripsNote: "Buy the demo with USDC on Stellar Testnet. The internal Starlog demo ticket is not valid for venue admission.",
+    from: "FROM", payUSDC: "PAY WITH USDC · TESTNET", payCard: "OFFICIAL TICKETS",
     mapKicker: "FIND YOUR PEOPLE", mapTitle: "The city is yours, too.",
     mapText: "Explore meetups and places reported by the community.",
     mapAll: "ALL", mapMeetups: "MEETUPS", mapMerchants: "MERCHANTS", citiesLabel: "CITIES",
@@ -110,11 +110,11 @@ const COPY = {
       ["Funds stay in escrow", "The Soroban contract releases payment under the trip terms."],
       ["Travel and meet your people", "Arrive with a plan, people and places to discover."],
     ],
-    escrowNote: "Planned product flow. Escrow and payments still need a configured contract and connected checkout.",
+    escrowNote: "Demo checkout uses Pollar and Soroban on Stellar Testnet. Starlog issues an internal demo ticket that the event provider does not recognize.",
     footerLine: "Travel and meet, pay your way.", built: "BUILT ON THE STELLAR NETWORK",
-    checkoutTitle: "This event isn't sold through Starlog",
-    checkoutSub: "This is an estimated price. Continue to the official website for a ticket. Pollar can only charge for events published and sold by Starlog.",
-    amount: "ESTIMATED PRICE", checkoutButton: "CONTINUE TO OFFICIAL TICKETS",
+    checkoutTitle: "TESTNET DEMO CHECKOUT",
+    checkoutSub: "Pay with test USDC in Pollar to receive an internal Starlog demo ticket. It is not valid for venue admission and is not a purchase from the official ticket seller.",
+    amount: "DEMO AMOUNT",
     close: "CLOSE", openMenu: "Open menu", closeMenu: "Close menu", guide: "Plan your next adventure with Starlog",
     selected: "SELECTED PLACE", locationList: "PLACES ON THE MAP", cryptoDirectory: "COMMUNITY DIRECTORY",
     eventInfo: "OFFICIAL AGENDA",
@@ -156,6 +156,8 @@ export default function Home() {
   const [mapKind, setMapKind] = useState<MapKind>("all");
   const [selectedPlaceId, setSelectedPlaceId] = useState("meetup-valencia");
   const [checkoutTrip, setCheckoutTrip] = useState<Trip | null>(null);
+  const [checkoutEventId, setCheckoutEventId] = useState<number | null>(null);
+  const [checkoutEventLoading, setCheckoutEventLoading] = useState(false);
   const [meetupForm, setMeetupForm] = useState({ title: "", city: "", date: "", capacity: "", description: "" });
   const [newMeetup, setNewMeetup] = useState<MapPlace | null>(null);
   const [meetupStatus, setMeetupStatus] = useState("");
@@ -197,8 +199,21 @@ export default function Home() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [checkoutTrip, mobileMenuOpen]);
 
-  const openCheckout = (trip: Trip) => {
+  const openCheckout = async (trip: Trip) => {
     setCheckoutTrip(trip);
+    setCheckoutEventId(null);
+    setCheckoutEventLoading(true);
+    try {
+      const response = await fetch("/api/events", { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load demo listings");
+      const events = await response.json() as Array<{ id: number; title: string }>;
+      const title = trip.title.en.toLocaleLowerCase();
+      setCheckoutEventId(events.find((event) => event.title.toLocaleLowerCase() === title)?.id ?? null);
+    } catch {
+      setCheckoutEventId(null);
+    } finally {
+      setCheckoutEventLoading(false);
+    }
   };
 
   const handleMeetupSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -412,8 +427,10 @@ export default function Home() {
             <h2 id="checkout-title">{c.checkoutTitle}</h2>
             <p className="checkout-plan">{checkoutTrip.title[locale]}</p>
             <p className="checkout-sub">{c.checkoutSub}</p>
-            <div className="checkout-amount"><span>{c.amount}</span><strong>{checkoutTrip.priceUSDC} USDC</strong><b>{checkoutTrip.priceEUR[locale]}</b></div>
-            <a className="hard-button button-copper checkout-submit" href={checkoutTrip.url} target="_blank" rel="noreferrer">{c.checkoutButton} ↗</a>
+            <div className="checkout-amount"><span>{c.amount}</span><strong>{checkoutTrip.priceUSDC.replace("*", "")} USDC</strong><b>{checkoutTrip.priceEUR[locale]}</b></div>
+            {checkoutEventLoading
+              ? <p className="trip-pollar-unavailable">Loading the Pollar Testnet checkout…</p>
+              : <EventsList signedIn={user !== null} eventId={checkoutEventId} checkoutMode className="trip-pollar-checkout-list" />}
             <button className="modal-cancel" type="button" onClick={() => setCheckoutTrip(null)}>{c.close}</button>
           </section>
         </div>

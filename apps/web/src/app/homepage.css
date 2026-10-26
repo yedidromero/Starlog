@@ -418,6 +418,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .checkout-submit { width: 100%; min-height: 58px; margin-top: 19px; font-size: 15px; }
 .checkout-official-link { display: flex; min-height: 54px; align-items: center; justify-content: center; margin-top: 10px; padding: 10px 14px; border: 1px solid var(--petroleum); color: var(--petroleum); font: 700 14px/1.4 Inter, sans-serif; text-align: center; }
 .checkout-official-link:hover { background: var(--fog); }
+.trip-pollar-checkout-list { width: 100%; margin-top: 17px; }
+.trip-pollar-checkout { display: grid; gap: 14px; width: 100%; }
+.trip-pollar-testnet-note { margin: 0; padding: 12px 14px; border-left: 4px solid var(--copper); background: var(--fog); color: var(--petroleum); font: 700 12px/1.5 "IBM Plex Mono", monospace; }
+.trip-pollar-price { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--mist-blue); border-bottom: 1px solid var(--mist-blue); color: var(--petroleum); }
+.trip-pollar-price span { font: 700 24px/1.1 "DM Serif Display", Georgia, serif; }
+.trip-pollar-price small { color: var(--mist-blue); font: 500 12px/1.4 Inter, sans-serif; text-align: right; }
+.trip-pollar-button { min-height: 54px; width: 100%; font-size: 14px; }
+.trip-pollar-unavailable { margin: 12px 0 0; padding: 13px 15px; border-left: 4px solid var(--dark-copper); background: var(--fog); color: var(--petroleum); font-size: 14px; line-height: 1.5; }
 .modal-cancel { width: 100%; min-height: 42px; margin-top: 8px; border: 0; background: transparent; color: var(--dark-copper); font: 600 13px "IBM Plex Mono", monospace; letter-spacing: .7px; text-decoration: underline; text-underline-offset: 4px; }
 
 .assistant-launcher {
