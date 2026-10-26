@@ -276,7 +276,11 @@ Next.js route handlers en `apps/web` + Postgres (Drizzle) + tareas programadas (
 - ✅ Producto A (ticket de socio) de punta a punta, **probado con Pollar real el 2026-10-25**: catálogo (`GET /api/events`) → `POST /api/bookings` (precio con descuento de nivel tomado de la comisión, reserva en DB + `create_booking`) → Pollar `signAndSubmitTx` → `POST /api/bookings/:id/confirm` (`release`: 4,6 XLM al organizador, 0,4 a la treasury, +5 XP) → ticket emitido. Reservas #1000 y #1001 confirmadas en cadena; ids de reserva empiezan en 1000 (migración 0002). Datos de demo: `node --env-file=.env.local scripts/seed-demo.mjs`.
 - ✅ Módulo 7, check-in con QR (2026-10-25): QR rotativo `ticket.ventana.HMAC` (cambia cada 60 s, acepta el minuto anterior; 7 tests), "Mis tickets" con QR en la home, página `/staff` (cámara con jsQR o pegar el código), `POST /api/checkin` (roles staff/organizer/admin leídos de la DB; un organizador solo su evento) → `mint_stamp(Event)` +100 XP; un solo sello por persona y evento aunque tenga varios tickets. Probado contra testnet: sello #1 acuñado, XP 15 → 115, repetición 409. Roles: `scripts/set-role.mjs <wallet> <rol>`.
 - ✅ Módulo 9, metadatos NFT (2026-10-25): `GET /api/meta/pass/:id` y `/api/meta/stamps/:id` (JSON estándar: name, description, image, attributes) + `/image` (SVG generado desde el estado on-chain: el pase cambia de color y barra de progreso por nivel; el sello muestra evento, ciudad y fecha). 404 para tokens inexistentes. En la home: tarjeta del pase con su arte y "Mis sellos". 6 tests. **Al desplegar la web**: `set_base_uri` (admin) en EstelaPass → `https://<dominio>/api/meta/pass/` y en EstelaStamps → `https://<dominio>/api/meta/stamps/`.
-- ✅ Producto B, paquete con vuelo vía Duffel (2026-10-25): `POST /api/flights/search`, `POST /api/bookings/package` (vuelo + cargo de servicio `FLIGHT_SERVICE_FEE` + ticket opcional; descuento solo del margen; pago en EURC/USDC 1:1 o XLM con `DEMO_XLM_PER_FIAT` solo testnet), confirmación que re-verifica el precio, compra en Duffel con `balance` y libera el escrow; si el precio cambió o Duffel falla → `refund` 100 %. Probado E2E con Duffel test + testnet: reserva #1003, PNR NGN4XR, 63,83 XLM (4,6 al organizador). UI "✈ Añadir vuelo" en cada evento. **Stays (hoteles) da 403: hay que pedir acceso a Duffel.** No probado aún: la ruta de reembolso por cambio de precio.
+- ✅ Producto B, paquete con vuelo vía Duffel (2026-10-25): `POST /api/flights/search`, `POST /api/bookings/package` (vuelo + cargo de servicio `FLIGHT_SERVICE_FEE` + ticket opcional; descuento solo del margen; pago en EURC/USDC 1:1 o XLM con `DEMO_XLM_PER_FIAT` solo testnet), confirmación que re-verifica el precio, compra en Duffel con `balance` y libera el escrow; si el precio cambió o Duffel falla → `refund` 100 %. Probado E2E con Duffel test + testnet: reserva #1003, PNR NGN4XR, 63,83 XLM (4,6 al organizador). UI "✈ Añadir vuelo" en cada evento. **Stays (hoteles) da 403: hay que pedir acceso a Duffel.** Ruta de reembolso probada: oferta que ya no existe → `refund` 100 % (reserva #1004, 56,2 XLM devueltos exactos, estado `refunded`).
+- ✅ Módulo 10, panel admin (`/admin`, solo rol admin): lista de reservas (sin datos de pasajeros), reembolso manual de reservas aún en el escrow (`POST /api/admin/bookings/:id/refund`, total por defecto; si ya se liberó → 409, reembolsar desde la treasury), saldos de la treasury vía Horizon. Probado: reserva #1005 pagada y trabada → reembolsada.
+  - ✅ Trustlines de USDC y EURC (Circle testnet) añadidas el 2026-10-25 a la treasury (`GA536WS7…V7CW`) y al organizador de prueba (`GAKMO2MG…`). Cada reserva comprueba antes de crearse (`assertCanSettle`) que la treasury y el organizador pueden recibir la moneda; si no, 503 y no se toca el escrow. Organizadores reales: deben abrir esas trustlines al darse de alta (con Pollar se hace solo si los assets están configurados). Emisores configurables con `USDC_ISSUER` / `EURC_ISSUER`.
+- ✅ Validaciones antes de cobrar (2026-10-25): saldo suficiente del viajero (`assertCanPay`, vía Horizon), fecha de nacimiento pasada y pasajero adulto en la fecha del vuelo (`passenger.ts`, 5 tests). Motivo: Duffel solo valida al ordenar (después del pago) → antes forzaba un reembolso (reservas #1006/#1007, con nacimiento = fecha del viaje; #1007 reembolsada 57,69 XLM). Errores al usuario en español con código estable (`payment_pending`, `insufficient_balance`…).
+- ✅ Sello de viaje completado: `GET /api/cron/trip-stamps` (Bearer `CRON_SECRET`; `vercel.json` lo programa a diario 04:00) acuña `Trip` (+50 XP) para reservas de vuelo confirmadas con `return_date` pasada; idempotente. Probado: sello #2 para la reserva #1003.
 - ✅ Una reserva viva por viajero y evento: si ya tiene ticket → 409; si tiene una sin pagar dentro de plazo → se retoma (no se crea otra); si ya estaba pagada → solo se confirma.
   - **Pendiente:** la wallet solo tiene XLM; hay que añadir **USDC y EURC de Circle testnet** como assets en el dashboard de Pollar para que abra las trustlines y se pueda pagar el escrow.
 
@@ -319,7 +323,77 @@ Next.js route handlers en `apps/web` + Postgres (Drizzle) + tareas programadas (
 3. Chain svc: `create_booking`, `release`, `refund` y `mint_stamp` firmados en el servidor.
 4. Primer flujo de punta a punta en testnet: crear la reserva → `fund` con Pollar → `release` → ver el XP.
 
-## 12. Decisiones abiertas
+## 12. Pagos para agentes de IA (x402) — X1 construido el 2026-10-25
+
+**Estado X1:** `@x402/core` + `@x402/stellar` 2.28 con un wrapper propio `withAgentPayment` (`src/server/x402.ts`) porque `@x402/next` exige Next 16 y estamos en 15.5; mismo flujo (402 → verificar → handler → liquidar solo si status < 400). Rutas: `GET /api/agent/events` (gratis), `POST /api/agent/flights/search` (0,01 USDC), `POST /api/agent/quotes` (0,005 USDC). Facilitador x402.org (stellar:testnet, comisiones patrocinadas, sin API key); cobro a la treasury (`X402_PAY_TO`). Agente de demo: `scripts/agent-demo.mjs` con `@x402/fetch`, cuenta `estela-agent` (`GBDTBGWC…V7HJ`, trustline USDC). Verificado: el 402 sale con el precio correcto (100000 unidades = 0,01 USDC al SAC de USDC, payTo treasury, `areFeesSponsored`). **Demo E2E en testnet OK**: el agente encontró el evento gratis, pagó 0,01 USDC por la búsqueda (tx `e3c05c3e…`) y 0,005 por la cotización (tx `e94fd33d…`), una búsqueda inválida devolvió 400 **sin cobro**; agente 20 → 19,985 USDC, treasury +0,015 USDC, **XLM del agente intacto** (la comisión la pagó el facilitador `GC5OLUZ4…`). Ejecutar: `AGENT_SECRET=$(stellar keys show estela-agent) node scripts/agent-demo.mjs LIS`.
+
+**Estado X2 (2026-10-25): ✅** `scripts/agent-book.mjs`: el agente busca y cotiza pagando con x402, inicia sesión con SEP-10 con su propia clave, reserva vuelo + ticket, **firma él mismo el `fund` del escrow** y confirma. Sin cambios en el servidor (mismas rutas y protecciones que la web). Probado: reserva #1009, PNR KIVB7B, ticket emitido, Estela Pass del agente con 62 XP.
+
+**Estado X3 (2026-10-25): ✅** Servidor MCP en `mcp/` (`@modelcontextprotocol/sdk` 1.32, stdio) con 5 herramientas en español: `buscar_eventos` (gratis), `buscar_vuelos` (0,01 USDC x402), `cotizar` (0,005 USDC x402), `reservar` (marcada `destructiveHint`; su descripción obliga a confirmar precio y pasajero con el usuario; paga por el escrow) y `mi_estela_pass`. Probado con un cliente MCP real (`mcp/test/e2e.mjs`): reserva #1010, PNR PGZAIW. Conectar a Claude Code: ver `mcp/README.md`.
+
+### Qué es x402
+Protocolo abierto (nacido en Coinbase) que hace útil el código HTTP **402 Payment Required**: una API cobra **por petición** y un agente de IA paga solo, sin cuentas ni tarjetas.
+```
+Agente → GET /recurso                                  → Estela
+Agente ← 402 + requisitos (precio, token, a quién pagar)
+Agente firma una transferencia de USDC (solo las "auth entries" de Soroban)
+Agente → GET /recurso + cabecera de pago               → Estela
+Estela → facilitador /verify + /settle                  → Stellar (~5 s)
+Agente ← 200 + el recurso
+```
+- En Stellar el agente **no necesita XLM**: el facilitador arma la transacción y paga la comisión de red.
+- Token por defecto: **USDC de Circle** (el mismo SAC `CBIELTK6…DAMA` que ya acepta el escrow); vale cualquier token SEP-41 (EURC también).
+- Facilitadores: **x402.org/Coinbase** (solo testnet, sin API key), **OpenZeppelin Channels** (testnet y mainnet, con API key), o uno propio en nuestro servidor (sin terceros; pagamos nosotros el XLM de las comisiones).
+- Paquetes oficiales (v2.28.0, sep-2026): `@x402/next` (`withX402` para route handlers: **cobra solo si la respuesta sale bien**, status < 400), `@x402/core`, `@x402/stellar`; para el agente, `@x402/fetch`.
+- Alternativa sin facilitador: **MPP Charge** (mismo concepto, transferencia SAC directa).
+
+### Encaje en Estela: qué sí y qué no
+- ✅ **Sí: cobrar a agentes por usar la API** (búsqueda de vuelos, cotizaciones). Cada búsqueda en Duffel nos cuesta; x402 la monetiza y frena abusos. **Nueva línea de ingresos** (§6).
+- ✅ **Sí: que un agente reserve** por el usuario. Pero **el pago de la reserva va por el escrow, no por x402**: x402 "exact" transfiere directo al cobrador y **no tiene reembolsos ni plazos**. Para cientos de euros necesitamos la protección del escrow (refund si Duffel falla, `reclaim` si no confirmamos). El agente firma el `fund` con su propia clave, igual que hoy firma Pollar.
+- ❌ **No: reemplazar el escrow por x402** para cobrar vuelos o tickets.
+
+### Pasos
+**X1 · Estela vende su API a agentes** (1 día aprox.)
+1. Facilitador: **x402.org en testnet** para la demo (sin key); **OZ Channels** para mainnet (pedir API key).
+2. Instalar `@x402/next @x402/core @x402/stellar`.
+3. Nuevo espacio `/api/agent/*`, sin login (el pago identifica):
+   - `GET /api/agent/events` — gratis (descubrimiento).
+   - `POST /api/agent/flights/search` — **0,01 USDC** por búsqueda, con `withX402`.
+   - `POST /api/agent/quotes` — **0,005 USDC**: precio desglosado de un paquete (vuelo + cargo + ticket − descuento del nivel).
+   - `payTo` = la treasury (ya tiene trustline USDC ✓).
+4. Agente de demo: script con `@x402/fetch` + esquema Stellar, una cuenta de testnet con USDC del faucet y **0 XLM**.
+5. Pruebas en testnet: 402 → pago → 200; una respuesta con error **no cobra**; pago inválido → 402.
+
+**X2 · El agente reserva por el usuario** (1 día aprox.)
+6. Login del agente con **SEP-10** usando su propia clave (ya lo soporta `/api/auth/*`).
+7. Reutilizar `POST /api/bookings` y `/api/bookings/package`: el agente recibe la XDR de `fund`, la firma con su clave, y llama a `confirm`. Mismas protecciones (saldo, pasajero adulto, trustlines, reembolso automático).
+8. A quién va el XP: en el MVP a la wallet que paga (la del agente). Para dárselo al viajero real, ver **X4**.
+
+**X3 · Que los agentes encuentren a Estela**
+9. Publicar un **servidor MCP de Estela** (herramientas `buscar_eventos`, `buscar_vuelos`, `cotizar`, `reservar`) y/o un OpenAPI en `/api/agent/openapi.json`; opcional, catálogo **Bazaar** de Vellar.
+10. Demo de hackathon: **Claude busca, cotiza y reserva** un viaje a un evento pagando en USDC desde su propia wallet.
+
+**X4 · El agente paga, el viajero recibe** (pendiente)
+Problema: el escrow da el XP a quien paga (`b.traveler` en `release`, `contracts/estela-escrow/src/lib.rs:193`), y el ticket del evento y los sellos también quedan en esa wallet. Cuando reserva un agente, todo se lo queda **la wallet del agente**, no la persona que viaja. Lo más grave es el **ticket**: el viajero necesita su QR para entrar al evento.
+Solución: separar **quién paga** de **quién viaja**. El agente indica en la reserva la wallet del viajero (campo `traveler`, opcional; por defecto, la del agente).
+
+| Qué | Para quién |
+|---|---|
+| Pago y reembolsos (`refund`, `cancel`, `reclaim`) | Wallet que paga (el agente) |
+| XP y descuento del Estela Pass | Wallet del viajero |
+| Ticket del evento y sellos del viaje | Wallet del viajero |
+
+11. **Opción A, para el hackathon (sin redeploy):** `POST /api/bookings/package` acepta `traveler` (dirección `G…`). El escrow sigue dando el XP al agente en `release`, y justo después de `confirm` el backend (que tiene el rol `awarder` en EstelaPass) llama a `remove_xp(agente)` + `add_xp(viajero)`. El ticket y los sellos se guardan a nombre del viajero en la base de datos (crear el usuario por su wallet si no existe). El descuento de nivel de `cotizar` y `reservar` se calcula con el viajero. El MCP `reservar` añade el parámetro `wallet_viajero`.
+12. **Opción B, la definitiva (cambia el contrato):** EstelaEscrow v3 con dos campos en `Booking`, `payer` (firma `fund`; recibe los reembolsos) y `beneficiary` (recibe el XP en `release`). Exige volver a desplegar el contrato en testnet (entre 3 900 y 6 500 XLM por wasm), regenerar los bindings y migrar el backend.
+13. Riesgos: un agente podría asignar el ticket a cualquier wallet. Es aceptable porque paga él, pero conviene que el viajero vea la reserva en "Mis tickets" y que el email de confirmación vaya al pasajero. Si se cancela, el XP se quita al viajero (no al agente).
+
+### Riesgos y decisiones
+- Facilitadores de testnet (x402.org, Vellar) **no sirven para mainnet**; OZ Channels requiere API key; uno propio nos hace pagar el XLM de comisiones.
+- Los precios de x402 se expresan en USD (USDC); para EURC hay que usar la forma explícita `{ amount, asset }`.
+- La wallet del agente necesita **trustline de USDC** y saldo.
+- Decidir: precio por llamada, si las búsquedas pagadas por un agente cuentan como "cotización" válida, y límites por agente.
+
+## 13. Decisiones abiertas
 
 - [ ] ¿**Fecha límite** del hackathon? (para recortar fases si hace falta)
 - [ ] **Precios de Estela** (sección 6): comisión sobre tickets (5–10 %), cargo de servicio por vuelo (5–15 €), markup de hoteles (8–15 %), prima de paquete y margen mínimo después del descuento.
@@ -335,3 +409,5 @@ Next.js route handlers en `apps/web` + Postgres (Drizzle) + tareas programadas (
 - Luma API (OpenAPI): https://public-api.luma.com/openapi.json
 - Anchors SEP-24 / SEP-31: https://developers.stellar.org/docs/platforms/anchor-platform
 - Cierre de Amadeus Self-Service: https://ignav.com/docs/amadeus-self-service-shutdown
+- x402 en Stellar: https://developers.stellar.org/docs/build/agentic-payments/x402 · spec: https://www.x402.org · ejemplos: https://github.com/stellar/x402-stellar · paquetes `@x402/next`, `@x402/stellar`, `@x402/fetch`
+- OZ Channels (facilitador): https://channels.openzeppelin.com/x402/testnet · key: https://channels.openzeppelin.com/testnet/gen

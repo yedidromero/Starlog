@@ -21,7 +21,7 @@ type Props = {
  */
 export function LoginPanel({ user, onUserChange, appearance = "default" }: Props) {
   const accountAppearance = appearance === "account";
-  const { isAuthenticated, verified, wallet, openLoginModal, logout, getClient } = usePollar();
+  const { isAuthenticated, verified, wallet, openLoginModal, openWalletBalanceModal, logout, getClient } = usePollar();
   const [providerProfile, setProviderProfile] = useState({ name: "Starlog traveler", avatar: "" });
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -158,6 +158,15 @@ export function LoginPanel({ user, onUserChange, appearance = "default" }: Props
         </p>
       ) : (
         <p>{busy ? "Signing in to Starlog…" : "Linking your Starlog session…"}</p>
+      )}
+      {wallet?.address && (
+        <button
+          type="button"
+          onClick={() => openWalletBalanceModal()}
+          className="self-start underline"
+        >
+          Ver saldo
+        </button>
       )}
       {error && (
         <p className="text-red-600">

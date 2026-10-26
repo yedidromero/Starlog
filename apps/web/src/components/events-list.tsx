@@ -3,7 +3,7 @@
 import { usePollar } from "@pollar/react";
 import { useEffect, useState } from "react";
 import { ApiError, post } from "@/lib/api";
-import { confirmWithRetry } from "@/lib/bookings";
+import { confirmWithRetry, payErrorMessage } from "@/lib/bookings";
 import { formatAmount } from "@/server/pricing";
 import { FlightPackage } from "./flight-package";
 
@@ -100,8 +100,8 @@ export function EventsList({
         track(event.id, { busy: true, message: "Approve the crypto payment in your wallet…" });
         const outcome = await signAndSubmitTx(started.fundXdr);
         if (outcome.status !== "success" && outcome.status !== "pending") {
-          const detail = "details" in outcome ? outcome.details : undefined;
-          throw new Error(`Your wallet did not submit the payment (${outcome.status}${detail ? `: ${detail}` : ""})`);
+          console.warn("Pollar did not send the payment", outcome);
+          throw new Error(payErrorMessage(outcome));
         }
         fundHash = outcome.hash;
       }

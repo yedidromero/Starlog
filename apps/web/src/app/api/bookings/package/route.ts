@@ -12,6 +12,7 @@ const body = z.object({
     gender: z.enum(["m", "f"]),
     givenName: z.string().trim().min(1).max(60),
     familyName: z.string().trim().min(1).max(60),
+    // Checked against the flight date in startPackageBooking (adults must be 18+).
     bornOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     email: z.string().email(),
     // E.164, as airlines require: +34600000000
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   const parsed = body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     const field = parsed.error.issues[0]?.path.join(".") ?? "body";
-    return json({ error: `invalid ${field}` }, { status: 400 });
+    return json({ error: `Revisa el campo: ${field}` }, { status: 400 });
   }
   try {
     return json(await startPackageBooking(session, parsed.data), { status: 201 });

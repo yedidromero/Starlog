@@ -16,7 +16,7 @@ const body = z.object({
 export async function POST(req: Request) {
   if (!(await currentSession())) return unauthorized();
   const parsed = body.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) return json({ error: "origin, destination (IATA) and departureDate are required" }, { status: 400 });
+  if (!parsed.success) return json({ error: "Indica el aeropuerto de origen (3 letras) y la fecha." }, { status: 400 });
   try {
     return json(await searchFlights({ ...parsed.data, adults: 1 }));
   } catch (err) {
