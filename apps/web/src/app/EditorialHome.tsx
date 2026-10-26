@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { usePollar } from "@pollar/react";
 import { EventsList } from "@/components/events-list";
 import { LoginPanel, type EstelaUser } from "@/components/login-panel";
 import { TravelAgent } from "@/components/travel-agent";
@@ -93,8 +91,8 @@ const COPY = {
     seeTrips: "EXPLORE TRIPS", howButton: "HOW IT WORKS",
     tripsKicker: "SIX WAYS TO GO", tripsTitle: "Your next destination.",
     tripsText: "Real experiences and events in Valencia, Barcelona and Madrid.",
-    tripsNote: "Buy the demo with USDC on Stellar Testnet. The internal Starlog demo ticket is not valid for venue admission.",
-    from: "FROM", payUSDC: "PAY WITH USDC · TESTNET", payCard: "OFFICIAL TICKETS",
+    tripsNote: "Find your next experience. Pay your way.",
+    from: "FROM", payUSDC: "PAY WITH CRYPTO", payCard: "OFFICIAL TICKETS",
     mapKicker: "FIND YOUR PEOPLE", mapTitle: "The city is yours, too.",
     mapText: "Explore meetups and places reported by the community.",
     mapAll: "ALL", mapMeetups: "MEETUPS", mapMerchants: "MERCHANTS", citiesLabel: "CITIES",
@@ -116,11 +114,11 @@ const COPY = {
       ["Funds stay in escrow", "The Soroban contract releases payment under the trip terms."],
       ["Travel and meet your people", "Arrive with a plan, people and places to discover."],
     ],
-    escrowNote: "Demo checkout uses Pollar and Soroban on Stellar Testnet. Starlog issues an internal demo ticket that the event provider does not recognize.",
+    escrowNote: "Approve your crypto payment securely in your wallet and keep your travel plans in one place.",
     footerLine: "Travel and meet, pay your way.", built: "BUILT ON THE STELLAR NETWORK",
-    checkoutTitle: "TESTNET DEMO CHECKOUT",
-    checkoutSub: "Pay with test USDC in Pollar to receive an internal Starlog demo ticket. It is not valid for venue admission and is not a purchase from the official ticket seller.",
-    amount: "DEMO AMOUNT",
+    checkoutTitle: "Complete your booking",
+    checkoutSub: "Review your experience and confirm your crypto payment securely in your wallet.",
+    amount: "TOTAL",
     close: "CLOSE", openMenu: "Open menu", closeMenu: "Close menu", guide: "Plan your next adventure with Starlog",
     selected: "SELECTED PLACE", locationList: "PLACES ON THE MAP", cryptoDirectory: "COMMUNITY DIRECTORY",
     eventInfo: "OFFICIAL AGENDA",
@@ -130,10 +128,10 @@ const COPY = {
 const TRIPS: Trip[] = [
   { id: "sons", city: { es: "VALÈNCIA", en: "VALENCIA" }, date: { es: "15 NOV 2026 · 18:00", en: "NOV 15, 2026 · 18:00" }, title: { es: "Sons del Cabanyal", en: "Sons del Cabanyal" }, detail: { es: "Concierto escenificado en Teatre El Musical.", en: "Staged concert at Teatre El Musical." }, priceUSDC: "10", priceEUR: { es: "≈ 10 €", en: "≈ €10" }, url: "https://www.valencia.es/w/sons-del-cabanyal.-concierto-escenificado-s.m.-poblados-mar%C3%ADtimos?redirect=%2Fcas%2Fpagina-de-categoria", code: "VLC", variant: "copper", image: "/trips/valencia.jpg", imageAlt: "City of Arts and Sciences reflected in its pools, Valencia", imageCredit: "CivArmy · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:City_of_Arts_and_Sciences,_Valencia,_Spain.jpg" },
   { id: "albufera", city: { es: "VALÈNCIA", en: "VALENCIA" }, date: { es: "FECHA FLEXIBLE", en: "FLEXIBLE DATE" }, title: { es: "Albufera · bus y barca", en: "Albufera · bus & boat" }, detail: { es: "Ruta de dos horas con paseo tradicional por la laguna.", en: "Two-hour trip with a traditional boat ride on the lagoon." }, priceUSDC: "22", priceEUR: { es: "≈ 22 €", en: "≈ €22" }, url: "https://www.visitvalencia.com/shop/valencia-autobus-turistico/albufera-bus-turistico", code: "ALB", variant: "fog", image: "/trips/albufera.jpg", imageAlt: "Sunset over Albufera lagoon near Valencia", imageCredit: "Kumarmp82 · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Magnificent_sunset_in_Albufera_lake,_Valencia.jpg" },
-  { id: "park-guell", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK AVAILABILITY" }, title: { es: "Park Güell · visita guiada", en: "Park Güell · guided visit" }, detail: { es: "Visita guiada de unos 50 minutos; entrada al parque aparte.", en: "About 50 minutes; park admission is separate." }, priceUSDC: "17+", priceEUR: { es: "≈ 17 € + entrada", en: "≈ €17 + admission" }, url: "https://parkguell.barcelona/en/planning-your-visit/guided-tours", code: "BCN", variant: "linen", image: "/trips/park-guell.jpg", imageAlt: "Colorful mosaic benches at Park Güell in Barcelona", imageCredit: "Txllxt TxllxT · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Barcelona_-_Parc_G%C3%BCell_-_Main_square_-_View_NNE_on_curved_mosaic_benches.jpg" },
-  { id: "oreja", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "26–27 NOV 2026 · 20:30", en: "NOV 26–27, 2026 · 20:30" }, title: { es: "La Oreja de Van Gogh", en: "La Oreja de Van Gogh" }, detail: { es: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi.", en: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi." }, priceUSDC: "38*", priceEUR: { es: "≈ 38 €*", en: "≈ €38*" }, url: "https://agenda500.barcelona.cat/es/detall/concert-la-oreja-de-van-gogh_99400765693.html", code: "BCN", variant: "copper", image: "/trips/palau-sant-jordi.jpg", imageAlt: "Palau Sant Jordi concert arena in Barcelona", imageCredit: "Katonams · CC BY-SA 3.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Palau_Sant_Jordi_(Barcelona,_ESP).jpg" },
-  { id: "bryan", city: { es: "MADRID", en: "MADRID" }, date: { es: "10 NOV 2026 · 20:30", en: "NOV 10, 2026 · 20:30" }, title: { es: "Bryan Adams", en: "Bryan Adams" }, detail: { es: "Roll with the Punches · Movistar Arena.", en: "Roll with the Punches · Movistar Arena." }, priceUSDC: "43*", priceEUR: { es: "≈ 43 €*", en: "≈ €43*" }, url: "https://www.movistararena.es/programacion/evento/bryan-adams-roll-with-the-punches/10-11-2026/20%3A30/informacion", code: "MAD", variant: "fog", image: "/trips/movistar-arena.jpg", imageAlt: "Movistar Arena in Madrid", imageCredit: "Luis García · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:WiZink_Center_(Madrid)_01.jpg" },
-  { id: "palacio", city: { es: "MADRID", en: "MADRID" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK OPENING TIMES" }, title: { es: "Palacio Real de Madrid", en: "Royal Palace of Madrid" }, detail: { es: "Visita autoguiada de las salas, unos 45 minutos.", en: "Self-guided visit of the rooms, about 45 minutes." }, priceUSDC: "18*", priceEUR: { es: "≈ 18 €*", en: "≈ €18*" }, url: "https://tickets.patrimonionacional.es/es/tickets/palacio-real-de-madrid", code: "MAD", variant: "linen", image: "/trips/royal-palace.jpg", imageAlt: "Main façade of the Royal Palace of Madrid", imageCredit: "Josefalcaes · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Fachada_principal_Palacio_Real_de_Madrid.jpg" },
+  { id: "park-guell", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK AVAILABILITY" }, title: { es: "Park Güell · visita guiada", en: "Park Güell · guided visit" }, detail: { es: "Visita guiada de unos 50 minutos; entrada al parque aparte.", en: "About 50 minutes; park admission is separate." }, priceUSDC: "17+", priceEUR: { es: "≈ 17 € + entrada", en: "≈ €17 + admission" }, url: "https://parkguell.barcelona/en/planning-your-visit/guided-tours", code: "BCN", variant: "linen", image: "/trips/barcelona-coast.jpg", imageAlt: "Park Güell gardens overlooking Barcelona and the Mediterranean Sea", imageCredit: "Unsplash · destination panorama", imageCreditUrl: "https://unsplash.com/license" },
+  { id: "oreja", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "26–27 NOV 2026 · 20:30", en: "NOV 26–27, 2026 · 20:30" }, title: { es: "La Oreja de Van Gogh", en: "La Oreja de Van Gogh" }, detail: { es: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi.", en: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi." }, priceUSDC: "38*", priceEUR: { es: "≈ 38 €*", en: "≈ €38*" }, url: "https://agenda500.barcelona.cat/es/detall/concert-la-oreja-de-van-gogh_99400765693.html", code: "BCN", variant: "copper", image: "/trips/barcelona-panorama.jpg", imageAlt: "Aerial panorama of Barcelona, Sagrada Familia and the Mediterranean coastline", imageCredit: "Unsplash · destination panorama", imageCreditUrl: "https://unsplash.com/license" },
+  { id: "bryan", city: { es: "MADRID", en: "MADRID" }, date: { es: "10 NOV 2026 · 20:30", en: "NOV 10, 2026 · 20:30" }, title: { es: "Bryan Adams", en: "Bryan Adams" }, detail: { es: "Roll with the Punches · Movistar Arena.", en: "Roll with the Punches · Movistar Arena." }, priceUSDC: "43*", priceEUR: { es: "≈ 43 €*", en: "≈ €43*" }, url: "https://www.movistararena.es/programacion/evento/bryan-adams-roll-with-the-punches/10-11-2026/20%3A30/informacion", code: "MAD", variant: "fog", image: "/trips/madrid-sunset.jpg", imageAlt: "Golden sunset across the rooftops and skyline of Madrid", imageCredit: "Unsplash · destination panorama", imageCreditUrl: "https://unsplash.com/license" },
+  { id: "palacio", city: { es: "MADRID", en: "MADRID" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK OPENING TIMES" }, title: { es: "Palacio Real de Madrid", en: "Royal Palace of Madrid" }, detail: { es: "Visita autoguiada de las salas, unos 45 minutos.", en: "Self-guided visit of the rooms, about 45 minutes." }, priceUSDC: "18*", priceEUR: { es: "≈ 18 €*", en: "≈ €18*" }, url: "https://tickets.patrimonionacional.es/es/tickets/palacio-real-de-madrid", code: "MAD", variant: "linen", image: "/trips/madrid-panorama.jpg", imageAlt: "Sweeping view across Madrid and the mountains on the horizon", imageCredit: "Unsplash · destination panorama", imageCreditUrl: "https://unsplash.com/license" },
 ];
 
 const BASE_PLACES: MapPlace[] = [
@@ -154,7 +152,6 @@ function StarSeal() {
 }
 
 export default function Home() {
-  const { openLoginModal } = usePollar();
   const [locale] = useState<Locale>("en");
   const [user, setUser] = useState<EstelaUser | null>(null);
   const [activeSection, setActiveSection] = useState("inicio");
@@ -288,7 +285,7 @@ export default function Home() {
               <div className="hero-buttons">
                 <a className="hard-button button-copper" href="#viajes" onClick={() => goToSection("viajes")}>{c.seeTrips}<span aria-hidden="true"> →</span></a>
                 <a className="hard-button button-dark" href="#como-funciona" onClick={() => goToSection("como-funciona")}>{c.howButton}</a>
-                <Link className="hero-assistant-button" href="/mi-starlog#viajes"><StarSeal /><span>{c.guide}</span></Link>
+                <button className="hero-assistant-button" type="button" onClick={() => window.dispatchEvent(new Event("starlog:open-agent"))}><StarSeal /><span>{c.guide}</span></button>
               </div>
             </div>
             <div className="hero-baseline"><span>STARLOG / MERIDIAN</span><span>{c.heroFooter}</span></div>
@@ -300,7 +297,7 @@ export default function Home() {
             <div><span className="section-kicker">{c.tripsKicker}</span><h2>{c.tripsTitle}</h2><p>{c.tripsText}</p></div>
             <span className="section-index">06 <i /> {locale === "es" ? "PLANES" : "PLANS"}</span>
           </div>
-          <p className="demo-price-note"><span>!</span>{c.tripsNote}</p>
+          <p className="demo-price-note">{c.tripsNote}</p>
           <div className="trip-grid">
             {TRIPS.map((trip, index) => (
               <article className={"trip-card trip-" + trip.variant} key={trip.id}>
@@ -322,7 +319,7 @@ export default function Home() {
           </div>
           <div className="musement-panel live-event-panel" id="starlog-events">
             <div className="musement-heading"><div><span className="section-kicker">BOOK WITH STARLOG</span><h3>Upcoming events</h3></div><span className="musement-badge">STELLAR NETWORK</span></div>
-            <p className="musement-intro">Browse current Starlog events. Sign in to book a ticket or add a Duffel flight to your trip.</p>
+            <p className="musement-intro">Discover upcoming events. Sign in to book your experience or add a flight to your trip.</p>
             <EventsList signedIn={user !== null} className="home-event-list" />
           </div>
         </section>
@@ -429,14 +426,15 @@ export default function Home() {
       {checkoutTrip && (
         <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCheckoutTrip(null); }}>
           <section className="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+            <div className="checkout-photo"><Image src={checkoutTrip.image} alt={checkoutTrip.imageAlt} fill sizes="(max-width: 760px) 100vw, 720px" className="trip-photo-image" /></div>
             <button className="modal-close" type="button" aria-label={c.close} onClick={() => setCheckoutTrip(null)}>×</button>
             <div className="modal-kicker">{checkoutTrip.city[locale]} · {checkoutTrip.date[locale]}</div>
             <h2 id="checkout-title">{c.checkoutTitle}</h2>
             <p className="checkout-plan">{checkoutTrip.title[locale]}</p>
             <p className="checkout-sub">{c.checkoutSub}</p>
-            <div className="checkout-amount"><span>{c.amount}</span><strong>{checkoutTrip.priceUSDC.replace("*", "")} USDC</strong><b>{checkoutTrip.priceEUR[locale]}</b></div>
+            <div className="checkout-amount"><span>{c.amount}</span><strong>{checkoutTrip.priceUSDC.replace("*", "")} USDC</strong><b>{checkoutTrip.priceEUR[locale].replace("*", "")}</b></div>
             {checkoutEventLoading
-              ? <p className="trip-pollar-unavailable">Loading the Pollar Testnet checkout…</p>
+              ? <p className="trip-pollar-unavailable">Preparing your secure checkout…</p>
               : <EventsList signedIn={user !== null} eventId={checkoutEventId} checkoutMode className="trip-pollar-checkout-list" />}
             <button className="modal-cancel" type="button" onClick={() => setCheckoutTrip(null)}>{c.close}</button>
           </section>

@@ -94,8 +94,8 @@ export async function myBookings(session: Session) {
 
   return {
     bookings: accountBookings,
-    // Sample profile history is only enabled on Stellar testnet and only for an
-    // account with no real bookings. It is never written to the database or chain.
-    demoMode: accountBookings.length === 0 && env().STELLAR_NETWORK_PASSPHRASE === "Test SDF Network ; September 2015",
+    // Every account in the presentation environment keeps the sample activity,
+    // including after making a booking. Samples are never written to the database.
+    demoMode: env().STELLAR_NETWORK_PASSPHRASE === "Test SDF Network ; September 2015",
   };
 }

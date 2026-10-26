@@ -237,7 +237,7 @@ export function JourneyStarMotion({ locale }: { locale: Locale }) {
         <path className="journey-trail-base" ref={routeRef} />
         <path className="journey-trail-copper" ref={traceRef} />
       </svg>
-      <div className="journey-star" ref={characterRef} data-walking="false" data-walk-direction="forward" data-facing="right" data-side="right" data-message-index="0" aria-hidden="true">
+      <div className="journey-star" ref={characterRef} data-walking="false" data-walk-direction="forward" data-facing="right" data-side="right" data-message-index="0" role="button" tabIndex={0} aria-label="Ask Starlog, your travel agent" onClick={() => window.dispatchEvent(new Event("starlog:open-agent"))} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); window.dispatchEvent(new Event("starlog:open-agent")); } }}>
         <span className="journey-bubble">{message}</span>
         <svg className="journey-star-art" viewBox="0 0 100 120" fill="none">
           <g className="journey-star-body">

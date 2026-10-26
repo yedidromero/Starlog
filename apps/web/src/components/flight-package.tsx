@@ -75,11 +75,11 @@ export function FlightPackage({ event, onBooked, profileSearch = false, openByDe
       });
       let fundHash: string | undefined;
       if (started.fundXdr) {
-        setBusy(`Confirm the ${formatAmount(BigInt(started.price.amount))} ${event?.currency ?? payWith} payment in Pollar…`);
+        setBusy(`Confirm the ${formatAmount(BigInt(started.price.amount))} ${event?.currency ?? payWith} payment in your wallet…`);
         const outcome = await signAndSubmitTx(started.fundXdr);
         if (outcome.status !== "success" && outcome.status !== "pending") {
           const detail = "details" in outcome ? outcome.details : undefined;
-          throw new Error(`Pollar did not submit the payment (${outcome.status}${detail ? `: ${detail}` : ""})`);
+          throw new Error(`Your wallet did not submit the payment (${outcome.status}${detail ? `: ${detail}` : ""})`);
         }
         fundHash = outcome.hash;
       }
@@ -109,7 +109,7 @@ export function FlightPackage({ event, onBooked, profileSearch = false, openByDe
 
   return (
     <div className={`mt-2 rounded-lg bg-black/[.03] dark:bg-white/[.04] ${profileSearch ? "p-5 text-base" : "p-3 text-sm"} flex flex-col gap-3`}>
-      {profileSearch && <p className="opacity-80">Search live flight offers with Duffel, then book securely with Pollar.</p>}
+      {profileSearch && <p className="opacity-80">Find your flight and pay securely with crypto.</p>}
       <form onSubmit={search} className="flex flex-wrap items-center gap-2">
         <input
           value={origin}

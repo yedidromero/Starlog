@@ -37,6 +37,7 @@ type EventItem = { id: number; title: string; description: string | null; city: 
 type AccountData = { bookings: Booking[]; demoMode: boolean; stamps: Stamp[]; stampMetadata: Record<number, StampMetadata>; membership: Membership | null; events: EventItem[] };
 type BookingsResponse = { bookings: Booking[]; demoMode: boolean };
 type ProviderProfile = { name: string; email: string; avatar: string };
+type WalletAssetView = { code: string; balance: string | null; issuer?: string; chain: string; network: string; source?: string; status?: string };
 
 const DEMO_DESTINATIONS = [
   { place: "Venice", country: "Italy", year: "2025", code: "IT", style: "destination-memory-venice" },
@@ -68,6 +69,17 @@ const DEMO_PURCHASES: Booking[] = [
   { id: 631, kind: "ticket", currency: "USDC", amount: "44", status: "demo", createdAt: "2026-06-18T12:00:00.000Z", destination: "Valencia", origin: null, departureAt: null, returnAt: null, eventTitle: "Albufera · bus and boat", eventCity: "Valencia", eventCountry: "Spain", airlineBookingReference: null, hasDuffelOrder: false, isDemo: true, sampleOrderRef: "ST-00631", samplePaymentNote: "≈ 44 EUR · 2 guests" },
   { id: 418, kind: "ticket", currency: "USDC", amount: "17", status: "demo", createdAt: "2026-03-22T12:00:00.000Z", destination: "Barcelona", origin: null, departureAt: null, returnAt: null, eventTitle: "Park Güell · guided visit", eventCity: "Barcelona", eventCountry: "Spain", airlineBookingReference: null, hasDuffelOrder: false, isDemo: true, sampleOrderRef: "ST-00418", samplePaymentNote: "≈ 17 EUR · 1 guest" },
   { id: 297, kind: "ticket", currency: "EUR", amount: "12", status: "demo", createdAt: "2026-02-09T12:00:00.000Z", destination: "Madrid", origin: null, departureAt: null, returnAt: null, eventTitle: "Stellar Community Brunch", eventCity: "Madrid", eventCountry: "Spain", airlineBookingReference: null, hasDuffelOrder: false, isDemo: true, sampleOrderRef: "ST-00297", samplePaymentNote: "1 guest" },
+];
+
+const DEMO_UPCOMING_TRIPS: Booking[] = [
+  DEMO_ITINERARY,
+  { ...DEMO_ITINERARY, id: -843, amount: "249", destination: "Barcelona", origin: "Madrid", departureAt: "2026-11-26T10:00:00.000Z", returnAt: "2026-11-28T18:00:00.000Z", eventTitle: "La Oreja de Van Gogh · Barcelona weekend", eventCity: "Barcelona", sampleOrderRef: "ST-00843" },
+];
+
+const DEMO_PAST_TRIPS: Booking[] = [
+  { ...DEMO_ITINERARY, id: -701, amount: "315", status: "completed", createdAt: "2025-09-14T12:00:00.000Z", destination: "Venice", origin: "Madrid", departureAt: "2025-09-14T09:00:00.000Z", returnAt: "2025-09-18T18:00:00.000Z", eventTitle: "Venice · Grand Canal escape", eventCity: "Venice", eventCountry: "Italy", sampleOrderRef: "ST-00701" },
+  { ...DEMO_ITINERARY, id: -602, amount: "420", currency: "EURC", status: "completed", createdAt: "2025-04-08T12:00:00.000Z", destination: "Cairo + Giza", origin: "Barcelona", departureAt: "2025-04-08T08:00:00.000Z", returnAt: "2025-04-14T19:00:00.000Z", eventTitle: "Egypt · Pyramids and Nile discovery", eventCity: "Cairo", eventCountry: "Egypt", sampleOrderRef: "ST-00602" },
+  { ...DEMO_ITINERARY, id: -503, amount: "385", status: "completed", createdAt: "2024-11-12T12:00:00.000Z", destination: "Jerusalem", origin: "Madrid", departureAt: "2024-11-12T07:00:00.000Z", returnAt: "2024-11-17T16:00:00.000Z", eventTitle: "Jerusalem · Old City discovery", eventCity: "Jerusalem", eventCountry: "Israel", sampleOrderRef: "ST-00503" },
 ];
 
 const SECTIONS = [
@@ -118,7 +130,7 @@ function AccountAccessScreen({ title, message, children }: { title: string; mess
         <h1>{title}<span>.</span></h1>
         <p>{message}</p>
         {children}
-        <small>STARLOG ACCOUNT · POLLAR · STELLAR TESTNET</small>
+        <small>STARLOG ACCOUNT · SECURE CRYPTO WALLET</small>
       </main>
     </div>
   );
@@ -150,7 +162,7 @@ export function AccountDashboard() {
   }
   if (!user) {
     return (
-      <AccountAccessScreen title="Your trips belong here" message="Create your account or sign in with Google through Pollar to see your bookings, passport stamps and traveler profile.">
+      <AccountAccessScreen title="Your trips belong here" message="Create your account or sign in with Google to see your bookings, passport stamps and traveler profile.">
         <LoginPanel user={user} onUserChange={setUser} appearance="account" />
       </AccountAccessScreen>
     );
@@ -159,13 +171,42 @@ export function AccountDashboard() {
 }
 
 function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onUserChange: (user: EstelaUser | null) => void }) {
-  const { getClient } = usePollar();
+  const { getClient, isAuthenticated, walletBalance, refreshWalletBalance } = usePollar();
   const [providerProfile, setProviderProfile] = useState<ProviderProfile>({ name: "Starlog traveler", email: "", avatar: "" });
   const [activeSection, setActiveSection] = useState("resumen");
   const [data, setData] = useState<AccountData | null>(null);
   const [loadError, setLoadError] = useState("");
   const [selectedPurchase, setSelectedPurchase] = useState<Booking | null>(null);
   const [bookingRefresh, setBookingRefresh] = useState(0);
+  const [balanceOpen, setBalanceOpen] = useState(false);
+  const [balanceRefresh, setBalanceRefresh] = useState(0);
+  const [balancesLoading, setBalancesLoading] = useState(true);
+  const [balanceLookupFailed, setBalanceLookupFailed] = useState(false);
+  const [stellarAssets, setStellarAssets] = useState<WalletAssetView[]>([]);
+  const [checkedNetworks, setCheckedNetworks] = useState<Array<{ network: string; exists: boolean; failed: boolean }>>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let active = true;
+    setBalancesLoading(true);
+    void refreshWalletBalance().catch(() => undefined);
+    const networks = ["testnet", "mainnet"] as const;
+    // Unlike the app-enabled asset list, this existing SDK lookup enumerates all
+    // holdings of this public address. Keep each network separate; never sum them.
+    void Promise.all([
+      Promise.allSettled(networks.map(network => getClient().getWalletBalance(user.wallet, network))),
+      jsonOrThrow<{ assets: WalletAssetView[] }>("/api/me/wallet-assets").catch(() => null),
+    ]).then(([results, tokenBalances]) => {
+      if (!active) return;
+      setStellarAssets([...(tokenBalances?.assets ?? []), ...results.flatMap((result, index) => result.status === "fulfilled" ? result.value.balances.map(asset => ({ ...asset, chain: "STELLAR", network: networks[index] })) : [])]);
+      setCheckedNetworks(results.map((result, index) => ({ network: networks[index], exists: result.status === "fulfilled" && result.value.exists, failed: result.status === "rejected" })));
+      setBalanceLookupFailed(results.every(result => result.status === "rejected") && !tokenBalances?.assets.some(asset => asset.balance !== null));
+      setBalancesLoading(false);
+    });
+    const refresh = () => setBalanceRefresh(value => value + 1);
+    window.addEventListener("focus", refresh);
+    return () => { active = false; window.removeEventListener("focus", refresh); };
+  }, [isAuthenticated, getClient, refreshWalletBalance, user.wallet, bookingRefresh, balanceRefresh]);
 
   useEffect(() => {
     const client = getClient();
@@ -228,11 +269,16 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
     return () => observer.disconnect();
   }, [data]);
 
-  const travelBookings = useMemo(() => (data?.bookings ?? []).filter((booking) => booking.kind !== "ticket"), [data?.bookings]);
+  const travelBookings = useMemo(() => [
+    ...(data?.bookings ?? []).filter((booking) => booking.kind !== "ticket"),
+    ...(data?.demoMode ? [...DEMO_UPCOMING_TRIPS, ...DEMO_PAST_TRIPS] : []),
+  ], [data?.bookings, data?.demoMode]);
   const nextConfirmedTrip = travelBookings
     .filter((booking) => booking.status === "confirmed" && booking.departureAt && new Date(booking.departureAt).getTime() >= Date.now())
     .sort((a, b) => new Date(a.departureAt!).getTime() - new Date(b.departureAt!).getTime())[0];
   const upcomingTrip = nextConfirmedTrip ?? (data?.demoMode ? DEMO_ITINERARY : undefined);
+  const upcomingTrips = travelBookings.filter((booking) => booking.departureAt && new Date(booking.departureAt).getTime() >= Date.now() && (booking.isDemo || booking.status === "confirmed"));
+  const pastTrips = travelBookings.filter((booking) => booking.departureAt && new Date(booking.departureAt).getTime() < Date.now() && (booking.isDemo || booking.status === "confirmed" || booking.status === "completed")).sort((a, b) => new Date(b.departureAt!).getTime() - new Date(a.departureAt!).getTime());
   const visitedPlaces = useMemo(() => {
     const places = [
       ...travelBookings.map((booking) => booking.destination),
@@ -248,8 +294,18 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
     return (data?.events ?? []).filter((event) => knownPlaces.has(normalizePlace(event.city)) || Boolean(event.airport && knownAirports.has(event.airport.toUpperCase()))).slice(0, 3);
   }, [data?.events, travelBookings, visitedPlaces]);
   const firstName = providerProfile.name.trim().split(/\s+/)[0] || "traveler";
-  const travelStampCount = (data?.stamps ?? []).filter((stamp) => stamp.kind === "trip").length;
-  const visiblePurchases = data?.demoMode ? DEMO_PURCHASES : data?.bookings ?? [];
+  const travelStampCount = (data?.stamps ?? []).filter((stamp) => stamp.kind === "trip").length + (data?.demoMode ? DEMO_DESTINATIONS.length : 0);
+  const visiblePurchases = [...(data?.bookings ?? []), ...(data?.demoMode ? [...DEMO_PURCHASES, ...DEMO_PAST_TRIPS] : [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const displayedMembership: Membership | null = data?.demoMode
+    ? { xp: 1344, level: data.membership?.level ?? "Explorer", discountBps: 1000, passId: data.membership?.passId ?? null }
+    : data?.membership ?? null;
+  const sdkAssets: WalletAssetView[] = walletBalance.step === "loaded" ? walletBalance.data.balances.filter(asset => !stellarAssets.length || (asset.chain && asset.chain !== "STELLAR")).map(asset => ({ ...asset, chain: asset.chain ?? "STELLAR", network: asset.chain && asset.chain !== "STELLAR" ? asset.chain.toLowerCase() : walletBalance.data.network })) : [];
+  const walletAssets = [...stellarAssets, ...sdkAssets];
+  const hasFunds = (asset: WalletAssetView) => asset.balance != null && Number(asset.balance) > 0;
+  const primaryAsset = walletAssets.find(asset => asset.code === "USDC" && hasFunds(asset)) ?? walletAssets.find(asset => asset.code === "EURC" && hasFunds(asset)) ?? walletAssets.find(hasFunds) ?? walletAssets.find(asset => asset.code === "USDC") ?? walletAssets[0];
+  const balanceLabel = primaryAsset?.balance != null && Number.isFinite(Number(primaryAsset.balance))
+    ? `${Number(primaryAsset.balance).toLocaleString("en-US", { maximumFractionDigits: 7 })} ${primaryAsset.code}`
+    : balancesLoading ? "Loading…" : "View balances";
 
   return (
     <div className="account-page">
@@ -257,6 +313,7 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
         <Link className="account-brand" href="/" aria-label="Starlog home"><BrandMark /><span className="brand-name"><span>Star</span><b>log</b></span></Link>
         <Link className="account-back-link" href="/#viajes">EXPLORE TRIPS <span aria-hidden="true">↗</span></Link>
         <a className="account-header-user" href="#perfil" onClick={() => setActiveSection("perfil")} aria-label="Go to my profile"><AccountAvatar profile={providerProfile} /><span>{providerProfile.name.toUpperCase()}</span></a>
+        <button className="account-wallet-balance" type="button" onClick={() => setBalanceOpen(value => !value)} aria-expanded={balanceOpen} aria-label={`View wallet balance: ${balanceLabel}`}><span>{primaryAsset ? `${primaryAsset.code} BALANCE` : "WALLET BALANCE"}</span><strong>{balanceLabel} <span aria-hidden="true">↗</span></strong></button>
         <LoginPanel user={user} onUserChange={onUserChange} appearance="account" />
       </header>
 
@@ -279,6 +336,7 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
               <div className="account-kicker"><span className="account-live-dot" /> YOUR TRAVEL JOURNAL</div>
               <h1 id="account-title">Good to see you,<br /><em>{firstName}.</em></h1>
               <p>Your Starlog profile, confirmed bookings and on-chain travel memories.</p>
+              {data?.demoMode && <p className="account-presentation-label">PRESENTATION PROFILE · SAMPLE TRAVEL ACTIVITY</p>}
             </div>
             <div className="account-welcome-stamp" aria-label="Your Starlog member pass"><span>ST★RLOG</span><strong>{travelStampCount.toString().padStart(2, "0")}</strong><small>TRIP<br />STAMPS</small></div>
           </section>
@@ -295,10 +353,10 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
               <div className="account-empty-panel"><span className="account-empty-star">✳</span><h3>No upcoming trips yet.</h3><p>Your confirmed flights and travel packages will appear here.</p><FlightPackage profileSearch onBooked={() => setBookingRefresh((value) => value + 1)} /></div>
             )}
             <div className="account-trips-list" aria-label="Your booked trips">
-              {travelBookings.map((booking) => <TripRow key={booking.id} booking={booking} />)}
+              {upcomingTrips.filter((booking) => booking.id !== upcomingTrip?.id).map((booking) => <TripRow key={booking.id} booking={booking} />)}
               {data && travelBookings.length === 0 && !data.demoMode && <p className="account-empty-inline">Your booked flights and travel packages will show here.</p>}
-              {data?.demoMode && <p className="account-demo-note"><span>i</span> Sample itinerary from your original profile template. No flight was booked and no charge was made.</p>}
             </div>
+            {pastTrips.length > 0 && <div className="account-past-trips"><div className="account-section-heading"><div><span className="account-section-kicker">YOUR TRAVEL MEMORIES</span><h2>Past trips<span>.</span></h2></div><span className="account-inline-link">{pastTrips.length} TRIPS</span></div><div className="account-trips-list">{pastTrips.map((booking) => <TripRow key={booking.id} booking={booking} />)}</div></div>}
           </section>
 
           <section className="account-recommendations" aria-labelledby="recommendation-title">
@@ -318,12 +376,11 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
           <section className="account-purchases" id="compras" aria-labelledby="purchases-title">
             <div className="account-section-heading">
               <div><span className="account-section-kicker">03 / YOUR HISTORY</span><h2 id="purchases-title">Your purchases<span>.</span></h2></div>
-              <span className="account-inline-link">{data?.demoMode ? `${DEMO_PURCHASES.length.toString().padStart(2, "0")} SAMPLE PURCHASES` : `${data?.bookings.length ?? 0} BOOKINGS`}</span>
+              <span className="account-inline-link">{visiblePurchases.length.toString().padStart(2, "0")} PURCHASES</span>
             </div>
             <div className="account-purchase-list">
-              {visiblePurchases.map((booking) => <PurchaseRow key={booking.id} booking={booking} onOpen={() => setSelectedPurchase(booking)} />)}
+              {visiblePurchases.map((booking) => <PurchaseRow key={`${booking.isDemo ? "sample" : "booking"}-${booking.id}`} booking={booking} onOpen={() => setSelectedPurchase(booking)} />)}
               {data && visiblePurchases.length === 0 && <p className="account-empty-inline">Your completed ticket, flight and travel package purchases will appear here.</p>}
-              {data?.demoMode && <p className="account-demo-note"><span>i</span> Sample purchase history from your original profile template. No charges were made and no tickets were issued.</p>}
             </div>
             <MyTickets refreshKey={bookingRefresh} />
           </section>
@@ -331,24 +388,26 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
           <section className="account-profile" id="perfil" aria-labelledby="profile-title">
             <div className="account-section-heading">
               <div><span className="account-section-kicker">04 / YOUR DETAILS</span><h2 id="profile-title">Your traveler profile<span>.</span></h2></div>
-              <span className="account-inline-link">CONNECTED WITH POLLAR</span>
+              <span className="account-inline-link">CRYPTO WALLET CONNECTED</span>
             </div>
             <div className="account-profile-card">
               <div className="profile-identity">
                 <AccountAvatar profile={providerProfile} large />
-              <div><span>STELLAR WALLET CONNECTED</span><h3>{providerProfile.name}</h3><p>{providerProfile.email || "Pollar account"} <i /> {data?.demoMode ? `${DEMO_DESTINATIONS.length} sample destinations` : `${visitedPlaces.length} places in your trip history`}</p></div>
-                {data?.membership && <span className="profile-tier">ESTELA PASS<br /><strong>{data.membership.level.toUpperCase()}</strong></span>}
+              <div><span>STELLAR WALLET CONNECTED</span><h3>{providerProfile.name}</h3><p>{providerProfile.email || "Starlog account"} <i /> {data?.demoMode ? `${DEMO_DESTINATIONS.length} sample destinations` : `${visitedPlaces.length} places in your trip history`}</p></div>
+                {displayedMembership && <span className="profile-tier">ESTELA PASS<br /><strong>{displayedMembership.level.toUpperCase()}</strong><small>{displayedMembership.discountBps / 100}% OFF</small></span>}
               </div>
+              {displayedMembership && <div className="profile-benefits"><div><span>YOUR TRAVEL XP</span><strong>{displayedMembership.xp.toLocaleString("en-US")} <small>XP</small></strong></div><div><span>MEMBER DISCOUNT</span><strong>{displayedMembership.discountBps / 100}% <small>OFF</small></strong></div><button type="button" onClick={() => setBalanceOpen(true)}><span>WALLET BALANCES</span><strong>{balanceLabel}</strong></button></div>}
               <div className="profile-passport">
-                <div className="profile-passport-heading"><div><span>YOUR ON-CHAIN TRAVEL PASSPORT</span><p>NFT stamps issued from completed trips and event check-ins</p></div><strong>{data?.stamps.length.toString().padStart(2, "0") ?? "00"} STAMPS</strong></div>
-                {data?.demoMode && data.stamps.length === 0 ? <DemoDestinationGallery /> : <StampGallery stamps={data?.stamps ?? []} metadata={data?.stampMetadata ?? {}} />}
-                {data?.membership && <div className="profile-membership">
-                  {data.membership.passId !== null && <img src={`/api/meta/pass/${data.membership.passId}/image?xp=${data.membership.xp}`} alt={`Estela Pass, ${data.membership.level} level`} width={400} height={250} />}
-                  <div><span>ESTELA PASS · {data.membership.level.toUpperCase()}</span><strong>{data.membership.xp.toLocaleString("en-US")} XP</strong><small>{data.membership.discountBps / 100}% member discount · based on your on-chain activity</small></div>
+                <div className="profile-passport-heading"><div><span>YOUR TRAVEL PASSPORT</span><p>Destination badges and memories from your travels</p></div><strong>{((data?.stamps.length ?? 0) + (data?.demoMode ? DEMO_DESTINATIONS.length : 0)).toString().padStart(2, "0")} STAMPS</strong></div>
+                {data?.demoMode && <DemoDestinationGallery />}
+                {(!data?.demoMode || Boolean(data?.stamps.length)) && <StampGallery stamps={data?.stamps ?? []} metadata={data?.stampMetadata ?? {}} />}
+                {displayedMembership && <div className="profile-membership">
+                  {displayedMembership.passId !== null && <img src={`/api/meta/pass/${displayedMembership.passId}/image?xp=${displayedMembership.xp}`} alt={`Estela Pass, ${displayedMembership.level} level`} width={400} height={250} />}
+                  <div><span>ESTELA PASS · {displayedMembership.level.toUpperCase()}</span><strong>{displayedMembership.xp.toLocaleString("en-US")} XP</strong><small>{displayedMembership.discountBps / 100}% member discount · {data?.demoMode ? "your presentation member benefits" : "based on your on-chain activity"}</small></div>
                 </div>}
               </div>
               <div className="profile-fields">
-                <label><span>ACCOUNT EMAIL</span><input value={providerProfile.email || "Not shared by Pollar"} readOnly /></label>
+                <label><span>ACCOUNT EMAIL</span><input value={providerProfile.email || "Email not shared"} readOnly /></label>
                 <label><span>STELLAR WALLET</span><input value={user.wallet} readOnly /></label>
                 <label><span>ACCOUNT ROLE</span><input value={user.role.toUpperCase()} readOnly /></label>
                 <label><span>DESTINATIONS IN YOUR HISTORY</span><input value={visitedPlaces.join(" · ") || "No completed trips yet"} readOnly /></label>
@@ -361,6 +420,15 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
       </main>
 
       {selectedPurchase && <PurchaseDialog booking={selectedPurchase} onClose={() => setSelectedPurchase(null)} />}
+      {balanceOpen && <section className="account-balances-panel" role="dialog" aria-modal="false" aria-labelledby="wallet-balances-title" onKeyDown={event => { if (event.key === "Escape") setBalanceOpen(false); }}>
+        <header><div><span>YOUR CONNECTED WALLET</span><h2 id="wallet-balances-title">Your assets</h2></div><button type="button" onClick={() => setBalanceOpen(false)} aria-label="Close wallet balances">×</button></header>
+        <p className="account-balance-address">{user.wallet.slice(0, 8)}…{user.wallet.slice(-8)}</p>
+        {balancesLoading && <p role="status">Refreshing your balances…</p>}
+        {walletAssets.map((asset, index) => <div className="account-asset-row" key={`${asset.chain}-${asset.network}-${asset.code}-${asset.issuer ?? "native"}-${index}`}><div><strong>{asset.code}</strong><small>{asset.chain === "STELLAR" ? "Stellar" : asset.chain} · {asset.network}{asset.issuer ? ` · ${asset.issuer.slice(0, 4)}…${asset.issuer.slice(-4)}` : ""}{asset.status === "not-held" ? " · Not held in this wallet" : ""}</small></div><b>{asset.balance != null && Number.isFinite(Number(asset.balance)) ? Number(asset.balance).toLocaleString("en-US", { maximumFractionDigits: 7 }) : "Unavailable"}</b></div>)}
+        {!balancesLoading && !walletAssets.length && <p>{balanceLookupFailed ? "Balances are temporarily unavailable. Please refresh to try again." : "No assets were found for this address on the checked networks."}</p>}
+        {!balancesLoading && checkedNetworks.filter(item => !item.exists).map(item => <p className="account-balance-network-note" key={item.network}>{item.network === "mainnet" ? "Mainnet" : "Testnet"}: {item.failed ? "balance lookup unavailable" : "account not found"}</p>)}
+        <button type="button" className="account-balance-refresh" onClick={() => setBalanceRefresh(value => value + 1)} disabled={balancesLoading}>REFRESH BALANCES ↻</button>
+      </section>}
       <TravelAgent signedIn />
     </div>
   );
@@ -373,13 +441,13 @@ function TripFeature({ booking }: { booking: Booking }) {
     <>
       <article className="account-feature-trip">
         <div className="account-feature-copy">
-          <div className="account-trip-topline"><span className={`account-status ${booking.isDemo ? "account-status-sample" : ""}`}><i /> {booking.isDemo ? "SAMPLE PLAN · DEMO" : "CONFIRMED BOOKING"}</span><span>STL · #{booking.id}</span></div>
+          <div className="account-trip-topline"><span className={`account-status ${booking.isDemo ? "account-status-sample" : ""}`}><i /> {booking.isDemo ? "PLANNED TRIP" : "CONFIRMED BOOKING"}</span><span>STL · #{Math.abs(booking.id)}</span></div>
           <div className="account-trip-city"><span>{booking.kind === "ticket" ? "UP NEXT" : "NEXT STOP"}</span><h3>{destination}</h3><span className="account-country">{booking.eventCountry?.toUpperCase() || booking.destination?.toUpperCase() || "TRAVEL BOOKING"}</span></div>
           <div className="account-trip-details">
             <div><AccountIcon name="calendar" /><span><small>{booking.isDemo ? "TRAVEL DATES" : "DEPARTURE"}</small><strong>{booking.isDemo && booking.returnAt ? `${formatDate(booking.departureAt)} — ${formatDate(booking.returnAt)}` : formatDate(booking.departureAt)}</strong></span></div>
             <div><AccountIcon name="ticket" /><span><small>{booking.isDemo ? "FEATURED EVENT" : "BOOKING"}</small><strong>{booking.eventTitle || (booking.kind === "travel" ? "Duffel flight" : "Flight + event package")}</strong></span></div>
           </div>
-          <div className="account-trip-actions">{booking.isDemo ? <span className="account-trip-demo-label">SAMPLE ITINERARY · NOT BOOKED</span> : <Link className="account-button account-button-copper" href="#compras">VIEW BOOKING <AccountIcon name="arrow" /></Link>}<span className="account-trip-ref">{booking.isDemo ? `SAMPLE #${booking.sampleOrderRef ?? booking.id}` : booking.airlineBookingReference ? `AIRLINE REF · ${booking.airlineBookingReference}` : `BOOKING #${booking.id}`}</span></div>
+          <div className="account-trip-actions"><Link className="account-button account-button-copper" href="#compras">{booking.isDemo ? "VIEW TRIP" : "VIEW BOOKING"} <AccountIcon name="arrow" /></Link><span className="account-trip-ref">{booking.isDemo ? `ITINERARY ${booking.sampleOrderRef ?? booking.id}` : booking.airlineBookingReference ? `AIRLINE REF · ${booking.airlineBookingReference}` : `BOOKING #${booking.id}`}</span></div>
         </div>
         <div className="account-trip-art" aria-label={`Travel route from ${origin} to ${destination}`}>
           <div className="account-art-grid" /><div className="account-art-orbit account-art-orbit-one" /><div className="account-art-orbit account-art-orbit-two" />
@@ -389,21 +457,26 @@ function TripFeature({ booking }: { booking: Booking }) {
           <span className="account-art-code">STARLOG—#{booking.id}</span>
         </div>
       </article>
-      <div className="account-trip-footnote"><span>{booking.isDemo ? <><AccountIcon name="spark" /> SAMPLE ITINERARY</> : <><AccountIcon name="check" /> VERIFIED FROM YOUR BOOKING</>}</span><span>{booking.isDemo ? `Sample amount: ${booking.amount} ${booking.currency} · No booking or charge was made` : booking.returnAt ? `Return · ${formatDate(booking.returnAt)}` : booking.currency ? `${booking.amount} ${booking.currency}` : "Confirmed booking"}</span></div>
+      <div className="account-trip-footnote"><span>{booking.isDemo ? <><AccountIcon name="spark" /> TRAVEL ITINERARY</> : <><AccountIcon name="check" /> VERIFIED FROM YOUR BOOKING</>}</span><span>{booking.isDemo ? `${booking.amount} ${booking.currency} · ${booking.returnAt ? `Return ${formatDate(booking.returnAt)}` : "Travel plan"}` : booking.returnAt ? `Return · ${formatDate(booking.returnAt)}` : booking.currency ? `${booking.amount} ${booking.currency}` : "Confirmed booking"}</span></div>
     </>
   );
 }
 
 function TripRow({ booking }: { booking: Booking }) {
   const place = booking.destination || booking.eventCity || "Flight booking";
-  return <article className="account-trip-row"><div><span>{booking.status.toUpperCase()} · {booking.kind.toUpperCase()}</span><strong>{place}</strong><small>{booking.origin ? `${booking.origin} → ` : ""}{booking.eventTitle || booking.airlineBookingReference || `Booking #${booking.id}`}</small></div><span>{formatDate(booking.departureAt || booking.createdAt)}</span><b>{booking.amount} {booking.currency}</b></article>;
+  const status = booking.isDemo ? (booking.departureAt && new Date(booking.departureAt).getTime() < Date.now() ? "COMPLETED" : "UPCOMING") : booking.status.toUpperCase();
+  return <article className="account-trip-row"><div><span>{status} · TRIP</span><strong>{place}</strong><small>{booking.origin ? `${booking.origin} → ` : ""}{booking.eventTitle || booking.airlineBookingReference || `Booking #${booking.id}`}</small></div><span>{formatDate(booking.departureAt || booking.createdAt)}</span><b>{booking.amount} {booking.currency}</b></article>;
 }
 
 function RecommendationCard({ event }: { event: EventItem }) {
+  const city = normalizePlace(event.city);
+  const title = event.title.toLowerCase();
+  const image = title.includes("bryan") ? "/trips/madrid-sunset.jpg" : title.includes("albufera") ? "/trips/albufera.jpg" : title.includes("guell") || title.includes("güell") ? "/trips/barcelona-coast.jpg" : city.includes("barcelona") ? "/trips/barcelona-panorama.jpg" : city.includes("valencia") ? "/trips/valencia.jpg" : "/trips/madrid-panorama.jpg";
+  const description = title.includes("bryan") ? "Live music, city lights and a memorable Madrid escape." : title.includes("oreja") ? "A Barcelona weekend filled with music and Mediterranean views." : title.includes("stellar") ? "Meet the Stellar community for talks, demos and new connections." : title.includes("albufera") ? "Discover the lagoon by boat and stay for a spectacular sunset." : `Discover a new experience in ${event.city}, inspired by your travels.`;
   return (
     <article className="account-recommendation-card">
-      <div className="recommendation-art"><span>{event.city.toUpperCase()} / {event.country.toUpperCase()}</span><strong>{event.city.toUpperCase()}</strong><i>✳</i></div>
-      <div className="recommendation-content"><span className="recommendation-reason">A PLACE FROM YOUR TRIP HISTORY</span><h3>{event.title}</h3><p>{event.description || `Join a Starlog event in ${event.city}.`}</p><div><span>{event.ticketPrice ? `${formatBaseAmount(event.ticketPrice)} ${event.currency}` : formatDate(event.startsAt)}</span><Link href="/#viajes" aria-label={`Explore ${event.title}`}>↗</Link></div></div>
+      <div className="recommendation-art recommendation-photo"><img src={image} alt={`${event.city} destination panorama`} loading="lazy" /><span>{event.city.toUpperCase()} / {event.country.toUpperCase()}</span><strong>{event.city.toUpperCase()}</strong></div>
+      <div className="recommendation-content"><span className="recommendation-reason">PICKED FOR YOUR NEXT ADVENTURE</span><h3>{event.title}</h3><p>{description}</p><div><span>{event.ticketPrice ? `${formatBaseAmount(event.ticketPrice)} ${event.currency}` : formatDate(event.startsAt)}</span><Link href="/#viajes" aria-label={`Explore ${event.title}`}>↗</Link></div></div>
     </article>
   );
 }
@@ -434,19 +507,8 @@ function StampGallery({ stamps, metadata }: { stamps: Stamp[]; metadata: Record<
   if (!stamps.length) return <p className="account-empty-inline">Your NFT stamps appear here after a completed trip or event check-in.</p>;
   return (
     <>
-      <div className="profile-passport-stamps">
-        {stamps.map((stamp) => {
-          const item = metadata[stamp.tokenId];
-          const place = stampMetadataAttribute(item, "Place") || "Starlog destination";
-          const title = item?.name || (stamp.kind === "trip" ? "Completed trip" : "Event stamp");
-          return <article className="passport-stamp" key={stamp.tokenId}>
-            {item?.image && <img className="passport-stamp-nft" src={item.image} alt={title} loading="lazy" />}
-            <span className="passport-stamp-shade" aria-hidden="true" /><span className="passport-stamp-meta">NFT · {stamp.kind === "trip" ? "TRIP" : "EVENT"}</span><span className="passport-stamp-symbol">✧</span><strong>{place.toUpperCase()}</strong><small>#{stamp.tokenId} · {new Date(stamp.createdAt).toLocaleDateString("en-US", { year: "numeric" })}</small>
-          </article>;
-        })}
-      </div>
       <div className="profile-passport-option-two">
-        <div className="passport-option-heading"><div><span>OPTION 02 · POSTCARD STAMPS</span><h4>Places you&apos;ve been</h4><p>Real destination photos paired with your on-chain travel memories.</p></div><strong>{stamps.length.toString().padStart(2, "0")} PLACES</strong></div>
+        <div className="passport-option-heading"><div><span>COLLECTED DESTINATIONS</span><h4>Places you&apos;ve been</h4><p>Real destination photos paired with your travel memories.</p></div><strong>{stamps.length.toString().padStart(2, "0")} PLACES</strong></div>
         <div className="destination-memory-rail" aria-label="Photo postcards for your NFT stamps">
           {stamps.map((stamp) => {
             const item = metadata[stamp.tokenId];
@@ -466,19 +528,21 @@ function StampGallery({ stamps, metadata }: { stamps: Stamp[]; metadata: Record<
 
 function DemoDestinationGallery() {
   return (
+    <>
     <div className="profile-passport-option-two">
-      <div className="passport-option-heading"><div><span>SAMPLE DESTINATIONS · DEMO</span><h4>Places I&apos;ve been</h4><p>Photo memories carried over from the original profile template.</p></div><strong>03 PLACES</strong></div>
+      <div className="passport-option-heading"><div><span>COLLECTED DESTINATIONS</span><h4>Places I&apos;ve been</h4><p>Every journey leaves a memory.</p></div><strong>03 PLACES</strong></div>
       <div className="destination-memory-rail" aria-label="Sample destination memories, not NFT stamps">
         {DEMO_DESTINATIONS.map((destination) => {
           const photo = destinationPhoto(destination.place);
           return <article className={`destination-memory ${destination.style}`} key={destination.place}>
-            <div className="destination-memory-stamp">{photo && <img src={photo} alt={`${destination.place}, ${destination.country}`} loading="lazy" decoding="async" />}<span className="destination-memory-code">{destination.code} · {destination.year} · DEMO</span><span className="destination-memory-star" aria-hidden="true">✧</span></div>
-            <div className="destination-memory-caption"><strong>{destination.place}</strong><span>{destination.country}</span><small>{destination.year} · SAMPLE</small></div>
+            <div className="destination-memory-stamp">{photo && <img src={photo} alt={`${destination.place}, ${destination.country}`} loading="lazy" decoding="async" />}<span className="destination-memory-code">{destination.code} · {destination.year}</span><span className="destination-memory-star" aria-hidden="true">✧</span></div>
+            <div className="destination-memory-caption"><strong>{destination.place}</strong><span>{destination.country}</span><small>{destination.year}</small></div>
           </article>;
         })}
       </div>
-      <p className="account-demo-note"><span>i</span> Sample destinations only. These are not NFT stamps and are not linked to live bookings.</p>
+      <p className="account-demo-note">Illustrative destination badges for the presentation profile.</p>
     </div>
+    </>
   );
 }
 
@@ -489,9 +553,9 @@ function stampMetadataAttribute(metadata: StampMetadata | undefined, name: strin
 
 function destinationPhoto(place: string): string | null {
   const normalized = normalizePlace(place);
-  if (normalized.includes("venice") || normalized.includes("venezia")) return "https://images.unsplash.com/photo-1701697637411-f5b878978d53?auto=format&fit=crop&w=720&q=80";
-  if (normalized.includes("egypt") || normalized.includes("giza") || normalized.includes("cairo")) return "https://images.unsplash.com/photo-1732532929159-05fcf0ab456d?auto=format&fit=crop&w=720&q=80";
-  if (normalized.includes("israel") || normalized.includes("jerusalem")) return "https://images.unsplash.com/photo-1697054810280-8e83633002e5?auto=format&fit=crop&w=720&q=80";
+  if (normalized.includes("venice") || normalized.includes("venezia")) return "/stamps/venice.jpg";
+  if (normalized.includes("egypt") || normalized.includes("giza") || normalized.includes("cairo")) return "/stamps/egypt.jpg";
+  if (normalized.includes("israel") || normalized.includes("jerusalem")) return "/stamps/israel.jpg";
   return null;
 }
 

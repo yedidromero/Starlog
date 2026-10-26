@@ -41,7 +41,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .journey-trail path { fill: none; vector-effect: non-scaling-stroke; }
 .journey-trail-base { stroke: rgba(74,124,140,.72); stroke-width: 1.5; stroke-dasharray: 5 11; }
 .journey-trail-copper { stroke: var(--copper); stroke-width: 3; stroke-linecap: square; }
-.journey-star { position: fixed; z-index: 59; top: 0; left: 0; width: 68px; height: 84px; pointer-events: none; will-change: transform; }
+.journey-star { position: fixed; z-index: 59; top: 0; left: 0; width: 68px; height: 84px; pointer-events: auto; cursor: pointer; will-change: transform; }
+.journey-star:focus-visible { outline: 2px solid var(--light-copper); outline-offset: 6px; }
+.journey-star > * { pointer-events: none; }
 .journey-star-art { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(4px 4px 0 var(--deep-petroleum)); }
 .journey-star-body { transform-box: fill-box; transform-origin: 50% 54%; }
 .journey-star-shadow { fill: var(--deep-petroleum); transform: translate(3px, 4px); }
@@ -1755,3 +1757,57 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .event-purchase-recovery a { color: var(--dark-copper); text-decoration: underline; text-underline-offset: 3px; }
 .event-purchase-retry { min-height: 36px; padding: 0 14px; border: 1px solid var(--deep-petroleum); background: var(--copper); color: var(--deep-petroleum); font: 700 11px "IBM Plex Mono", monospace; text-transform: uppercase; }
 @media (max-width: 700px) { .home-login-control { justify-items: center; } .live-event-panel { padding: 18px; } .event-card { padding: 17px; } }
+
+/* Panoramic destination photography stays unobstructed. */
+.trip-graphic { height: auto; aspect-ratio: 16 / 10; padding: 0; }
+.trip-graphic::after { background: linear-gradient(0deg, rgba(11,38,51,.14), transparent 45%); pointer-events: none; }
+.trip-city-glyph, .trip-orbit { display: none; }
+.trip-number { top: 14px; left: 14px; padding: 5px 8px; border: 1px solid rgba(255,255,255,.6); background: rgba(11,38,51,.45); font-size: 13px; }
+.trip-star { top: auto; right: 14px; bottom: 14px; width: 35px; height: 35px; transform: none; background: rgba(242,236,227,.9); }
+.trip-star .star-seal { width: 23px; height: 23px; }
+.trip-photo-credit { font-size: 11px; min-height: 24px; }
+.assistant-panel-planner { height: min(690px, calc(100dvh - 120px)); }
+.assistant-panel-planner .assistant-chat-view { overflow: hidden; }
+.assistant-panel-planner .assistant-transcript { overscroll-behavior: contain; }
+.assistant-panel-planner .assistant-form { flex: 0 0 auto; }
+.assistant-status { padding: 10px; color: var(--dark-copper); font: 15px/1.5 Inter,sans-serif; }
+@media (max-width: 760px) { .trip-graphic { height: auto; aspect-ratio: 16 / 10; } .assistant-panel-planner { height: min(620px, calc(100dvh - 100px)); } }
+.assistant-bubble { white-space: pre-wrap; overflow-wrap: anywhere; }
+.assistant-bubble a { text-decoration: underline; text-underline-offset: 3px; color: var(--dark-copper); }
+.starlog-site { background-color: var(--deep-petroleum); }
+
+.site-header { z-index: 100; }
+
+/* Readable, photo-led checkout for the presentation. */
+.checkout-modal { width: min(100%, 720px); padding: 28px; font-family: Inter, Arial, sans-serif; }
+.checkout-photo { position: relative; height: 180px; margin: -28px -28px 24px; overflow: hidden; border-bottom: 1px solid var(--mist-blue); }
+.checkout-photo img { object-fit: cover; }
+.checkout-modal .modal-close { z-index: 2; width: 42px; height: 42px; background: var(--linen); font-size: 30px; }
+.checkout-modal .modal-kicker { font: 600 15px/1.5 "IBM Plex Mono", monospace; }
+.checkout-modal h2 { margin-top: 12px; font-size: clamp(34px, 5vw, 42px); line-height: 1.05; }
+.checkout-modal .checkout-plan { font-size: 24px; margin: 14px 0 8px; }
+.checkout-modal .checkout-sub { font: 18px/1.5 Inter, Arial, sans-serif; margin-bottom: 20px; }
+.checkout-modal .checkout-amount > span { font-size: 15px; }
+.checkout-modal .checkout-amount strong { font-size: 46px; }
+.checkout-modal .checkout-amount b { font-size: 18px; }
+.checkout-payment-method { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; padding: 14px 0 8px; color: var(--petroleum); }
+.checkout-payment-method > span { grid-column: 1 / -1; color: var(--dark-copper); font: 600 14px "IBM Plex Mono", monospace; }
+.checkout-payment-method strong { font: 600 20px/1.4 Inter, Arial, sans-serif; }
+.checkout-payment-method small { align-self: center; font: 16px/1.4 Inter, Arial, sans-serif; }
+.event-card-buy { min-height: 52px; font-size: 16px; line-height: 1.4; }
+.event-card-meta { font-size: 16px; }
+.checkout-modal .trip-pollar-button { min-height: 62px; font: 700 18px/1.4 Inter, Arial, sans-serif; letter-spacing: .4px; }
+.checkout-modal .modal-cancel { min-height: 46px; font-size: 16px; }
+.checkout-presentation-note { margin: 4px 0 0; color: var(--mist-blue); font: 14px/1.5 Inter, Arial, sans-serif; text-align: center; }
+.checkout-modal .event-purchase-result, .checkout-modal .event-purchase-error { font-size: 17px; line-height: 1.5; }
+@media (max-width: 600px) {
+  .modal-backdrop { padding: 12px; }
+  .checkout-modal { padding: 22px; }
+  .checkout-photo { height: 150px; margin: -22px -22px 20px; }
+  .checkout-modal .modal-kicker { font-size: 14px; }
+  .checkout-modal .checkout-plan { font-size: 22px; }
+  .checkout-modal .checkout-sub { font-size: 17px; }
+  .checkout-modal .trip-pollar-button { font-size: 17px; }
+}
+.trip-content p, .section-heading p, .event-card-description, .musement-intro { font-size: 18px !important; line-height: 1.6; }
+.trip-actions .hard-button { font-size: 15px !important; min-height: 56px; }

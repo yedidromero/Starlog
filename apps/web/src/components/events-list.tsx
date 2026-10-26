@@ -51,7 +51,7 @@ function PurchaseFeedback({
                 target="_blank"
                 rel="noreferrer"
               >
-                Activate wallet on Stellar Testnet
+                Activate your wallet
               </a>
               <button onClick={retry} disabled={purchase.busy} className="event-purchase-retry">
                 Retry purchase
@@ -97,11 +97,11 @@ export function EventsList({
 
       let fundHash: string | undefined;
       if (started.fundXdr) {
-        track(event.id, { busy: true, message: "Approve the payment in Pollar…" });
+        track(event.id, { busy: true, message: "Approve the crypto payment in your wallet…" });
         const outcome = await signAndSubmitTx(started.fundXdr);
         if (outcome.status !== "success" && outcome.status !== "pending") {
           const detail = "details" in outcome ? outcome.details : undefined;
-          throw new Error(`Pollar did not submit the payment (${outcome.status}${detail ? `: ${detail}` : ""})`);
+          throw new Error(`Your wallet did not submit the payment (${outcome.status}${detail ? `: ${detail}` : ""})`);
         }
         fundHash = outcome.hash;
       }
@@ -114,7 +114,7 @@ export function EventsList({
       track(event.id, {
         busy: false,
         message: isDemoCheckout
-          ? `Testnet demo payment complete. Starlog ticket #${confirmed.bookingId} is ready; it is not valid for venue admission.`
+          ? `Payment confirmed. Your Starlog booking preview #${confirmed.bookingId} is saved.`
           : `Done! Booking #${confirmed.bookingId} is confirmed and your ticket is ready.${saved}`,
       });
     } catch (err) {
@@ -132,7 +132,7 @@ export function EventsList({
     ? events.filter((event) => !event.description?.startsWith("Testnet demo listing."))
     : events.filter((event) => event.id === eventId);
   if (checkoutMode && visibleEvents.length === 0) {
-    return <p className="trip-pollar-unavailable">This demo offer is not set up in Starlog yet. Run the demo data setup, then try again.</p>;
+    return <p className="trip-pollar-unavailable">This experience is not available to book yet. Please choose another experience.</p>;
   }
 
   return (
@@ -148,19 +148,19 @@ export function EventsList({
             className={checkoutMode ? "event-card-buy trip-pollar-button" : "event-card-buy"}
           >
             {purchase?.busy
-              ? "Waiting for Pollar…"
+              ? "Confirming your payment…"
               : signedIn
-                ? checkoutMode ? `Buy demo ticket · ${event.currency} via Pollar` : `Buy with ${event.currency} via Pollar`
-                : "Sign in with Pollar to buy"}
+                ? `Pay with crypto · ${event.currency}`
+                : "Sign in to pay with crypto"}
           </button>
         );
 
         if (checkoutMode) {
           return (
             <div key={event.id} className="trip-pollar-checkout">
-              <p className="trip-pollar-testnet-note">TESTNET DEMO · Starlog ticket only; not valid for venue admission.</p>
-              <div className="trip-pollar-price"><span>{formatAmount(BigInt(event.ticketPrice ?? "0"))} {event.currency}</span><small>Price shown is a demo amount.</small></div>
+              <div className="checkout-payment-method"><span>PAYMENT METHOD</span><strong>Crypto wallet <span aria-hidden="true">↗</span></strong><small>{event.currency} · Stellar</small></div>
               {checkoutButton}
+              <p className="checkout-presentation-note">Presentation preview · No venue ticket is issued.</p>
               <PurchaseFeedback
                 purchase={purchase}
                 retry={() => buy(event, checkoutMode)}
@@ -177,7 +177,7 @@ export function EventsList({
               {new Date(event.startsAt).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })} ·{" "}
               {[event.venue, event.city].filter(Boolean).join(", ")}
             </p>
-            {event.description && <p className="event-card-description">{event.description}</p>}
+            {event.description && <p className="event-card-description">{event.description === "Demos, charlas y networking del ecosistema Stellar." ? "Talks, demos and networking with the Stellar community." : event.description}</p>}
             {event.ticketPrice && (
               <div className="event-card-purchase">
                 <span className="event-card-price">

@@ -67,7 +67,7 @@ export function LoginPanel({ user, onUserChange, appearance = "default" }: Props
         webAuthDomain: challenge.webAuthDomain,
       });
       if (proof.status !== "signed") {
-        throw new Error(proof.details ?? proof.code ?? "Pollar did not sign the challenge");
+        throw new Error(proof.details ?? proof.code ?? "Your wallet could not verify this sign-in");
       }
       onUserChange(await post<EstelaUser>("/api/auth/verify", { transaction: proof.signedXdr }));
     } catch (err) {
