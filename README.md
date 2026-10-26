@@ -4,17 +4,28 @@
 
 Starlog is a travel and activities prototype with a text and voice assistant. This repository includes a booking portal and backend, a traveler guide, a LiveKit agent, an MCP server, and Stellar Soroban contracts.
 
-> **Demo scope:** Current flows use Stellar Testnet, Duffel sandbox, and LiveKit Cloud. Destination and event cards are examples, not valid tickets. Musement sandbox orders are disabled by default. This is not a production booking or payment service.
+> **Demo scope:** Current flows use Stellar Testnet, Duffel sandbox, and LiveKit Cloud. Madrid, València, and Barcelona recommendations, destination cards, and event cards are sample content for testing; their displayed prices and availability are not live offers or valid tickets. Musement sandbox orders are disabled by default. This is not a production booking or payment service.
 
 ## What Starlog includes
 
 - A booking portal with Pollar authentication, a Stellar wallet, and a wallet balance view.
-- A traveler guide for Madrid, València, and Barcelona.
+- A traveler guide with sample recommendations for Madrid, València, and Barcelona.
 - A text and voice travel assistant powered by LiveKit.
 - Duffel sandbox flight search and Estela MCP tools for event search, quotes, and Testnet bookings.
-- Soroban contracts and TypeScript bindings for escrow, Estela Pass, and Stamps.
+- Soroban contracts and TypeScript bindings for escrow and two OpenZeppelin-based NFTs: Estela Pass and Estela Stamps.
 
 A flight search or quote does not create a booking. The booking flow requires passenger details and explicit confirmation of the amount. Testnet payments and sandbox orders are not real travel purchases.
+
+## Deployed OpenZeppelin NFTs
+
+Estela Pass and Estela Stamps use OpenZeppelin Contracts for Stellar 0.8.0 (`stellar-tokens` and `stellar-access`). Both are non-transferable NFTs deployed on Stellar Testnet:
+
+| NFT | Testnet contract ID | Purpose |
+|---|---|---|
+| Estela Pass | `CB6ENR37I5ZIGRAWHTYBTWI4ZCOTZKK2I75CLLHCDIUTP3QG4VO2WL6S` | One membership NFT per traveler, minted after the first XP award; tracks XP, level, and member discount. |
+| Estela Stamps | `CDQQ7PKXRNOYZUW47USR6OJCODKPH45OCYRODEMYHO7LJZDO7Y2HF7ZD` | Collectible proof of an event check-in or completed trip; awards XP to Estela Pass. |
+
+The contract IDs and deployment details are recorded in [deploy/testnet.json](deploy/testnet.json). NFT metadata URLs are still placeholders, so the artwork and metadata are not yet published.
 
 ## How the components connect
 
@@ -44,7 +55,7 @@ The traveler’s Pollar wallet and the MCP agent’s Stellar wallet are separate
 | mcp | Estela tools for event search, flight search, quotes, and Testnet bookings. |
 | contracts | Soroban contract source code. |
 | packages | TypeScript bindings for the contracts. |
-| knowledge | Destination guide content for Madrid, València, and Barcelona. |
+| knowledge | Sample destination guide content for Madrid, València, and Barcelona. |
 | deploy/testnet.json | Testnet contract IDs, assets, network settings, and demo transactions. |
 
 Some components retain internal “Estela” names. They are part of the Starlog project.
