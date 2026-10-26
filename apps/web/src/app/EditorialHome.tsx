@@ -2,12 +2,12 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { usePollar } from "@pollar/react";
 import { EventsList } from "@/components/events-list";
 import { LoginPanel, type EstelaUser } from "@/components/login-panel";
 import { JourneyStarMotion } from "./JourneyStarMotion";
 
 type Locale = "es" | "en";
-type PaymentMethod = "USDC" | "EURC" | "XLM" | "CARD";
 type MapKind = "all" | "meetup" | "merchant";
 
 type Trip = {
@@ -70,9 +70,10 @@ const COPY = {
     ],
     escrowNote: "Flujo de producto previsto. Escrow y pagos aún requieren configurar el contrato y conectar el checkout.",
     footerLine: "Viaja pagando como quieras.", built: "CONSTRUIDO EN LA RED STELLAR",
-    checkoutTitle: "PREPARA TU PAGO", checkoutSub: "Elige cómo quieres pagar este plan.",
-    chooseMethod: "MÉTODO DE PAGO", amount: "IMPORTE DE REFERENCIA", checkoutButton: "CONTINUAR",
-    checkoutNotice: "Demo de checkout: no se ha realizado ningún cargo. Faltan la dirección/llamada del escrow Soroban y la pasarela de tarjeta.",
+    checkoutTitle: "Este plan no admite pago con wallet",
+    checkoutSub: "Este precio es orientativo. La compra de este lugar se completa en su web oficial; los eventos Starlog publicados sí se pagan con Pollar.",
+    amount: "PRECIO DE REFERENCIA", checkoutButton: "VER EVENTOS CON PAGO POLLAR",
+    officialButton: "COMPRAR EN LA WEB OFICIAL",
     close: "CERRAR", openMenu: "Abrir menú", closeMenu: "Cerrar menú", guide: "Planifica tu próxima aventura con Starlog",
     selected: "LUGAR SELECCIONADO", locationList: "LUGARES EN EL MAPA", cryptoDirectory: "DIRECTORIO COMUNITARIO",
     eventInfo: "AGENDA OFICIAL",
@@ -112,9 +113,10 @@ const COPY = {
     ],
     escrowNote: "Planned product flow. Escrow and payments still need a configured contract and connected checkout.",
     footerLine: "Travel and meet, pay your way.", built: "BUILT ON THE STELLAR NETWORK",
-    checkoutTitle: "SET UP YOUR PAYMENT", checkoutSub: "Choose how you want to pay for this plan.",
-    chooseMethod: "PAYMENT METHOD", amount: "REFERENCE AMOUNT", checkoutButton: "CONTINUE",
-    checkoutNotice: "Checkout demo: no charge was made. The Soroban escrow address/call and card gateway are not connected yet.",
+    checkoutTitle: "Wallet payment isn't available for this listing",
+    checkoutSub: "This is a reference price. Buy this experience through its official website; published Starlog events can be paid with Pollar.",
+    amount: "REFERENCE PRICE", checkoutButton: "SEE EVENTS THAT ACCEPT POLLAR",
+    officialButton: "BUY FROM THE OFFICIAL WEBSITE",
     close: "CLOSE", openMenu: "Open menu", closeMenu: "Close menu", guide: "Plan your next adventure with Starlog",
     selected: "SELECTED PLACE", locationList: "PLACES ON THE MAP", cryptoDirectory: "COMMUNITY DIRECTORY",
     eventInfo: "OFFICIAL AGENDA",
@@ -148,6 +150,7 @@ function StarSeal() {
 }
 
 export default function Home() {
+  const { openLoginModal } = usePollar();
   const [locale] = useState<Locale>("en");
   const [user, setUser] = useState<EstelaUser | null>(null);
   const [activeSection, setActiveSection] = useState("inicio");
@@ -155,8 +158,6 @@ export default function Home() {
   const [mapKind, setMapKind] = useState<MapKind>("all");
   const [selectedPlaceId, setSelectedPlaceId] = useState("meetup-valencia");
   const [checkoutTrip, setCheckoutTrip] = useState<Trip | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("USDC");
-  const [paymentNotice, setPaymentNotice] = useState(false);
   const [meetupForm, setMeetupForm] = useState({ title: "", city: "", date: "", capacity: "", description: "" });
   const [newMeetup, setNewMeetup] = useState<MapPlace | null>(null);
   const [meetupStatus, setMeetupStatus] = useState("");
@@ -198,10 +199,14 @@ export default function Home() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [checkoutTrip, mobileMenuOpen]);
 
-  const openCheckout = (trip: Trip, method: PaymentMethod) => {
+  const openCheckout = (trip: Trip) => {
     setCheckoutTrip(trip);
-    setPaymentMethod(method);
-    setPaymentNotice(false);
+  };
+
+  const goToWalletEvents = () => {
+    setCheckoutTrip(null);
+    document.getElementById("starlog-events")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!user) window.setTimeout(() => openLoginModal(), 250);
   };
 
   const handleMeetupSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -294,14 +299,14 @@ export default function Home() {
                   <a className="trip-source" href={trip.url} target="_blank" rel="noreferrer">{locale === "es" ? "CONSULTAR FUENTE OFICIAL" : "CHECK OFFICIAL SOURCE"} ↗</a>
               <div className="trip-price"><span>{c.from}</span><strong>{trip.priceUSDC}<small> USDC</small></strong><b>{trip.priceEUR[locale]}</b></div>
                   <div className="trip-actions">
-                    <button className="hard-button button-copper" type="button" onClick={() => openCheckout(trip, "USDC")}>{c.payUSDC}</button>
-                    <button className="hard-button button-dark" type="button" onClick={() => openCheckout(trip, "CARD")}>{c.payCard}</button>
+                    <button className="hard-button button-copper" type="button" onClick={() => openCheckout(trip)}>{c.payUSDC}</button>
+                    <a className="hard-button button-dark" href={trip.url} target="_blank" rel="noreferrer">{c.payCard}</a>
                   </div>
                 </div>
               </article>
             ))}
           </div>
-          <div className="musement-panel live-event-panel">
+          <div className="musement-panel live-event-panel" id="starlog-events">
             <div className="musement-heading"><div><span className="section-kicker">BOOK WITH STARLOG</span><h3>Upcoming events</h3></div><span className="musement-badge">STELLAR NETWORK</span></div>
             <p className="musement-intro">Browse current Starlog events. Sign in to book a ticket or add a Duffel flight to your trip.</p>
             <EventsList signedIn={user !== null} className="home-event-list" />
@@ -412,15 +417,13 @@ export default function Home() {
           <section className="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
             <button className="modal-close" type="button" aria-label={c.close} onClick={() => setCheckoutTrip(null)}>×</button>
             <div className="modal-kicker">{checkoutTrip.city[locale]} · {checkoutTrip.date[locale]}</div>
-            <h2 id="checkout-title">{c.checkoutTitle}</h2><p className="checkout-plan">{checkoutTrip.title[locale]}</p>
-          <div className="checkout-amount"><span>{c.amount}</span><strong>{checkoutTrip.priceUSDC} USDC</strong><b>{checkoutTrip.priceEUR[locale]}</b></div>
-            <span className="method-label">{c.chooseMethod}</span>
-            <div className="payment-methods" role="group" aria-label={c.chooseMethod}>
-              {(["USDC", "EURC", "XLM", "CARD"] as PaymentMethod[]).map((method) => <button type="button" key={method} aria-pressed={paymentMethod === method} className={paymentMethod === method ? "selected" : ""} onClick={() => { setPaymentMethod(method); setPaymentNotice(false); }}>{method === "CARD" ? (locale === "es" ? "TARJETA" : "CARD") : method}</button>)}
-            </div>
-            <div className="checkout-security"><StarSeal /><span>Pollar wallet · Stellar testnet</span></div>
-            {paymentNotice && <p className="checkout-notice" role="status">{c.checkoutNotice}</p>}
-            <button className="hard-button button-copper checkout-submit" type="button" onClick={() => setPaymentNotice(true)}>{c.checkoutButton} ↗</button>
+            <h2 id="checkout-title">{c.checkoutTitle}</h2>
+            <p className="checkout-plan">{checkoutTrip.title[locale]}</p>
+            <p className="checkout-sub">{c.checkoutSub}</p>
+            <div className="checkout-amount"><span>{c.amount}</span><strong>{checkoutTrip.priceUSDC} USDC</strong><b>{checkoutTrip.priceEUR[locale]}</b></div>
+            <div className="checkout-security"><StarSeal /><span>REAL WALLET CHECKOUT · PUBLISHED STARLOG EVENTS</span></div>
+            <button className="hard-button button-copper checkout-submit" type="button" onClick={goToWalletEvents}>{c.checkoutButton} ↗</button>
+            <a className="checkout-official-link" href={checkoutTrip.url} target="_blank" rel="noreferrer">{c.officialButton} ↗</a>
             <button className="modal-cancel" type="button" onClick={() => setCheckoutTrip(null)}>{c.close}</button>
           </section>
         </div>

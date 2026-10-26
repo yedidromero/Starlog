@@ -398,24 +398,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .footer-bottom a { color: var(--light-copper); text-decoration: underline; text-underline-offset: 3px; }
 
 .modal-backdrop { position: fixed; z-index: 60; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: 20px; background: rgba(11,38,51,.88); }
-.checkout-modal { position: relative; width: min(100%, 560px); padding: clamp(22px, 5vw, 42px); border: 2px solid var(--petroleum); background: var(--linen); color: var(--petroleum); box-shadow: 8px 8px 0 var(--dark-copper); }
+.checkout-modal { position: relative; width: min(100%, 680px); padding: clamp(24px, 5vw, 48px); border: 2px solid var(--petroleum); background: var(--linen); color: var(--petroleum); box-shadow: 8px 8px 0 var(--dark-copper); }
 .modal-close { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; border: 1px solid var(--petroleum); background: transparent; color: var(--petroleum); font: 28px/1 "DM Serif Display", Georgia, serif; }
-.modal-kicker { padding-right: 45px; color: var(--dark-copper); font-size: 8px; letter-spacing: 1.3px; }
-.checkout-modal h2 { margin: 15px 0 3px; color: var(--petroleum); font: 45px/.95 "DM Serif Display", Georgia, serif; letter-spacing: -.03em; }
-.checkout-plan { margin: 12px 0 22px; color: var(--dark-copper); font-size: 13px; }
+.modal-kicker { padding-right: 45px; color: var(--dark-copper); font-size: 13px; line-height: 1.5; letter-spacing: 1px; }
+.checkout-modal h2 { margin: 16px 0 3px; color: var(--petroleum); font: clamp(34px, 5vw, 46px)/1 "DM Serif Display", Georgia, serif; letter-spacing: -.03em; }
+.checkout-plan { margin: 14px 0 8px; color: var(--dark-copper); font: 600 20px/1.35 Inter, sans-serif; }
+.checkout-sub { max-width: 570px; margin: 0 0 22px; color: var(--petroleum); font: 17px/1.55 Inter, sans-serif; }
 .checkout-amount { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 6px 10px; padding: 14px 0; border-top: 1px solid var(--mist-blue); border-bottom: 1px solid var(--mist-blue); }
-.checkout-amount > span { grid-column: 1/-1; color: var(--dark-copper); font-size: 8px; letter-spacing: 1.2px; }
-.checkout-amount strong { font: 40px/.9 "DM Serif Display", Georgia, serif; }
-.checkout-amount b { color: var(--dark-copper); font-size: 11px; }
-.method-label { display: block; margin: 20px 0 8px; color: var(--dark-copper); font-size: 8px; font-weight: 600; letter-spacing: 1px; }
+.checkout-amount > span { grid-column: 1/-1; color: var(--dark-copper); font-size: 13px; font-weight: 600; letter-spacing: 1px; }
+.checkout-amount strong { font: 44px/1 "DM Serif Display", Georgia, serif; }
+.checkout-amount b { color: var(--dark-copper); font-size: 16px; }
+.method-label { display: block; margin: 20px 0 8px; color: var(--dark-copper); font-size: 13px; font-weight: 600; letter-spacing: 1px; }
 .payment-methods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
-.payment-methods button { min-height: 44px; border: 1px solid var(--petroleum); background: transparent; color: var(--petroleum); font: 600 10px "IBM Plex Mono", monospace; }
+.payment-methods button { min-height: 48px; border: 1px solid var(--petroleum); background: transparent; color: var(--petroleum); font: 600 14px "IBM Plex Mono", monospace; }
 .payment-methods button.selected { background: var(--petroleum); color: var(--linen); }
-.checkout-security { display: flex; align-items: center; gap: 9px; margin-top: 18px; padding: 10px; border: 1px solid var(--mist-blue); background: var(--fog); color: var(--petroleum); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .6px; }
+.checkout-security { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 14px; border: 1px solid var(--mist-blue); background: var(--fog); color: var(--petroleum); font: 600 13px/1.5 "IBM Plex Mono", monospace; letter-spacing: .3px; }
 .checkout-security .star-seal { width: 24px; height: 24px; }
-.checkout-notice { margin: 13px 0 0; padding: 11px; border-left: 3px solid var(--dark-copper); background: var(--fog); color: var(--petroleum); font: 10px/1.6 Inter, sans-serif; }
-.checkout-submit { width: 100%; margin-top: 19px; }
-.modal-cancel { width: 100%; min-height: 38px; margin-top: 8px; border: 0; background: transparent; color: var(--dark-copper); font: 600 9px "IBM Plex Mono", monospace; letter-spacing: 1px; text-decoration: underline; text-underline-offset: 4px; }
+.checkout-notice { margin: 13px 0 0; padding: 14px; border-left: 3px solid var(--dark-copper); background: var(--fog); color: var(--petroleum); font: 15px/1.6 Inter, sans-serif; }
+.checkout-submit { width: 100%; min-height: 58px; margin-top: 19px; font-size: 15px; }
+.checkout-official-link { display: flex; min-height: 54px; align-items: center; justify-content: center; margin-top: 10px; padding: 10px 14px; border: 1px solid var(--petroleum); color: var(--petroleum); font: 700 14px/1.4 Inter, sans-serif; text-align: center; }
+.checkout-official-link:hover { background: var(--fog); }
+.modal-cancel { width: 100%; min-height: 42px; margin-top: 8px; border: 0; background: transparent; color: var(--dark-copper); font: 600 13px "IBM Plex Mono", monospace; letter-spacing: .7px; text-decoration: underline; text-underline-offset: 4px; }
 
 .assistant-launcher {
   position: fixed !important;
