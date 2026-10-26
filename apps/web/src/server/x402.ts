@@ -59,12 +59,18 @@ function jsonResponse(body: unknown, status: number, init?: HeadersInit) {
 }
 
 /** Wraps a route handler so each successful call costs `route`'s price. */
-export function withAgentPayment(handler: (req: NextRequest) => Promise<Response>, route: RouteConfig) {
+export function withAgentPayment(
+  handler: (req: NextRequest) => Promise<Response>,
+  route: RouteConfig | (() => RouteConfig),
+) {
   let http: x402HTTPResourceServer | undefined;
   let ready: Promise<void> | undefined;
 
   return async (req: NextRequest): Promise<Response> => {
-    if (!http) http = new x402HTTPResourceServer(server(), route);
+    // Resolve server configuration only when a request arrives. Next.js imports
+    // route modules during `next build`, when production secrets aren't present.
+    const routeConfig = typeof route === "function" ? route() : route;
+    if (!http) http = new x402HTTPResourceServer(server(), routeConfig);
     ready ??= http.initialize().catch((err) => {
       ready = undefined; // retry on the next call
       throw err;
@@ -130,3 +136,4 @@ export function withAgentPayment(handler: (req: NextRequest) => Promise<Response
     return out;
   };
 }
+

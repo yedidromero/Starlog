@@ -23,5 +23,6 @@ export const POST = withAgentPayment(
       return errorResponse(err);
     }
   },
-  agentPrice("$0.01", "Estela: flight offers (one adult, economy, cheapest first)"),
+  () => agentPrice("$0.01", "Estela: flight offers (one adult, economy, cheapest first)"),
 );
+

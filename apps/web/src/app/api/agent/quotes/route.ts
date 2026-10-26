@@ -70,5 +70,6 @@ export const POST = withAgentPayment(
       return errorResponse(err);
     }
   },
-  agentPrice("$0.005", "Estela: exact package quote (flight + service fee + optional event ticket − member discount)"),
+  () => agentPrice("$0.005", "Estela: exact package quote (flight + service fee + optional event ticket − member discount)"),
 );
+
