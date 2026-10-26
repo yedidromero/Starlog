@@ -2,6 +2,7 @@
 
 import { usePollar } from "@pollar/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { post } from "@/lib/api";
 
 export type EstelaUser = { userId?: string; id?: string; wallet: string; role: string };
@@ -10,6 +11,7 @@ type Props = {
   /** The Estela session, or null; owned by the page so other components can use it. */
   user: EstelaUser | null;
   onUserChange: (user: EstelaUser | null) => void;
+  appearance?: "default" | "account" | "home";
 };
 
 /**
@@ -17,8 +19,11 @@ type Props = {
  * signs Estela's SEP-10 challenge so our backend knows which address it is talking
  * to and opens its own session cookie.
  */
-export function LoginPanel({ user, onUserChange }: Props) {
+export function LoginPanel({ user, onUserChange, appearance = "default" }: Props) {
+  const accountAppearance = appearance === "account";
   const { isAuthenticated, verified, wallet, openLoginModal, logout, getClient } = usePollar();
+  const [providerProfile, setProviderProfile] = useState({ name: "Starlog traveler", avatar: "" });
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // Only try automatically once per address, so a failure doesn't loop.
@@ -35,6 +40,18 @@ export function LoginPanel({ user, onUserChange }: Props) {
     return client.onAuthStateChange(show);
   }, [getClient]);
 
+  useEffect(() => {
+    if (!isAuthenticated || !verified) {
+      setProviderProfile({ name: "Starlog traveler", avatar: "" });
+      setAvatarFailed(false);
+      return;
+    }
+    const profile = getClient().getUserProfile();
+    const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
+    setProviderProfile({ name: name || "Starlog traveler", avatar: profile?.avatar ?? "" });
+    setAvatarFailed(false);
+  }, [getClient, isAuthenticated, verified, wallet?.address]);
+
   const linkSession = useCallback(async () => {
     if (!wallet?.address) return;
     setBusy(true);
@@ -50,7 +67,7 @@ export function LoginPanel({ user, onUserChange }: Props) {
         webAuthDomain: challenge.webAuthDomain,
       });
       if (proof.status !== "signed") {
-        throw new Error(proof.details ?? proof.code ?? "Pollar no firmó el challenge");
+        throw new Error(proof.details ?? proof.code ?? "Your wallet could not verify this sign-in");
       }
       onUserChange(await post<EstelaUser>("/api/auth/verify", { transaction: proof.signedXdr }));
     } catch (err) {
@@ -68,6 +85,33 @@ export function LoginPanel({ user, onUserChange }: Props) {
     void linkSession();
   }, [isAuthenticated, verified, wallet?.address, user?.wallet, linkSession]);
 
+  if (appearance === "home") {
+    if (user) {
+      const initials = providerProfile.name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toUpperCase() || "ST";
+      return (
+        <Link href="/mi-starlog" className="account-shortcut" aria-label={`Open ${providerProfile.name}'s Starlog profile`}>
+          <span className="account-shortcut-avatar">
+            {providerProfile.avatar && !avatarFailed
+              ? <img src={providerProfile.avatar} alt="" onError={() => setAvatarFailed(true)} />
+              : initials}
+          </span>
+          <b>MY STARLOG</b>
+        </Link>
+      );
+    }
+    return (
+      <div className="home-login-control">
+        {!isAuthenticated ? (
+          <button onClick={openLoginModal} className="wallet-connect-button" type="button"><span>SIGN IN</span><span className="wallet-network-label">STELLAR</span></button>
+        ) : (
+          <p className="home-login-status">{busy ? "Connecting your Starlog account…" : "Connecting your account…"}</p>
+        )}
+        {error && <p className="home-login-error" role="alert">{error} <button onClick={linkSession}>RETRY</button></p>}
+        {pollarError && <p className="home-login-error" role="alert">{pollarError}</p>}
+      </div>
+    );
+  }
+
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });
     onUserChange(null);
@@ -77,20 +121,30 @@ export function LoginPanel({ user, onUserChange }: Props) {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center gap-3 text-sm">
+      <div className={accountAppearance ? "account-login-control" : "flex flex-col items-center gap-3 text-sm"}>
         <button
           onClick={openLoginModal}
-          className="rounded-full bg-foreground text-background px-6 h-12 font-medium"
+          className={accountAppearance ? "account-button account-button-copper" : "rounded-full bg-foreground text-background px-6 h-12 font-medium"}
+          type="button"
         >
-          Entrar con Pollar
+          SIGN IN
         </button>
-        {pollarError && <p className="text-red-600 max-w-md text-center">{pollarError}</p>}
+        {pollarError && <p className={accountAppearance ? "account-login-error" : "text-red-600 max-w-md text-center"}>{pollarError}</p>}
       </div>
     );
   }
 
   if (wallet?.custody === "smart") {
-    return <p className="text-sm">Las wallets con passkey aún no están soportadas. Entra con Google o email.</p>;
+    return <p className="text-sm">Passkey wallets are not supported yet. Sign in with Google or email.</p>;
+  }
+
+  if (accountAppearance) {
+    return (
+      <div className="account-login-control">
+        {error && <p className="account-login-error" role="alert">{error} <button onClick={linkSession}>RETRY</button></p>}
+        <button onClick={signOut} className="account-signout" type="button">SIGN OUT</button>
+      </div>
+    );
   }
 
   return (
@@ -100,10 +154,10 @@ export function LoginPanel({ user, onUserChange }: Props) {
       </p>
       {user ? (
         <p>
-          Sesión de Estela activa · rol <strong>{user.role}</strong>
+          Starlog session active · role <strong>{user.role}</strong>
         </p>
       ) : (
-        <p>{busy ? "Firmando el acceso a Estela…" : "Falta vincular la sesión de Estela."}</p>
+        <p>{busy ? "Signing in to Starlog…" : "Linking your Starlog session…"}</p>
       )}
       {error && (
         <p className="text-red-600">
@@ -114,7 +168,7 @@ export function LoginPanel({ user, onUserChange }: Props) {
         </p>
       )}
       <button onClick={signOut} className="self-start underline">
-        Cerrar sesión
+        Sign out
       </button>
     </div>
   );

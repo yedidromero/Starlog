@@ -6,12 +6,12 @@ export async function post<T = unknown>(url: string, body: unknown): Promise<T> 
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(data.error ?? `HTTP ${res.status}`, res.status);
+  if (!res.ok) throw new ApiError(data.error ?? `HTTP ${res.status}`, res.status, data.code);
   return data as T;
 }
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(message: string, readonly status: number, readonly code?: string) {
     super(message);
   }
 }

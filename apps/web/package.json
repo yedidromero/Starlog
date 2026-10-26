@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node --use-system-ca ./node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -16,6 +16,9 @@
     "test:testnet": "node --env-file=.env.local node_modules/vitest/vitest.mjs run --config vitest.testnet.config.mts"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.24",
+    "@livekit/components-styles": "^1.2.0",
+    "@livekit/protocol": "^1.53.0",
     "@pollar/react": "^0.12.0",
     "@stellar/stellar-sdk": "^16.4.1",
     "@supabase/server": "^1.9.2",
@@ -25,6 +28,8 @@
     "estela-stamps": "file:../../packages/estela-stamps",
     "jose": "^6.2.13",
     "jsqr": "^1.4.0",
+    "livekit-client": "^2.23.0",
+    "livekit-server-sdk": "^2.19.2",
     "next": "15.5.28",
     "postgres": "^3.4.9",
     "qrcode": "^1.5.4",

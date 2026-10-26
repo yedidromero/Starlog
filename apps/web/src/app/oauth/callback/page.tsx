@@ -28,7 +28,7 @@ export default function OAuthCallback() {
     <main className="min-h-screen flex flex-col items-center justify-center gap-3 p-8 text-center">
       {errors && errors.length > 0 ? (
         <>
-          <h1 className="text-2xl font-semibold text-red-600">El inicio de sesión falló</h1>
+          <h1 className="text-2xl font-semibold text-red-600">Sign-in failed</h1>
           <ul className="font-mono text-sm">
             {errors.map(([k, v]) => (
               <li key={k}>
@@ -39,8 +39,8 @@ export default function OAuthCallback() {
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-semibold">Inicio de sesión completo</h1>
-          <p className="opacity-70">Puedes cerrar esta pestaña y volver a la pestaña de Estela.</p>
+          <h1 className="text-2xl font-semibold">Sign-in complete</h1>
+          <p className="opacity-70">You can close this tab and return to Starlog.</p>
         </>
       )}
     </main>

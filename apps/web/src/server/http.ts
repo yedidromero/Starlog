@@ -11,7 +11,7 @@ export function json(data: unknown, init?: ResponseInit) {
 
 /** Maps domain errors to HTTP answers; anything else is a 500. */
 export function errorResponse(err: unknown) {
-  if (err instanceof BookingError) return json({ error: err.message }, { status: err.status });
+  if (err instanceof BookingError) return json({ error: err.message, ...(err.code ? { code: err.code } : {}) }, { status: err.status });
   if (err instanceof ChainError) {
     console.error(err);
     return json({ error: err.message }, { status: 502 });

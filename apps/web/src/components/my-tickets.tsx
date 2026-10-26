@@ -32,25 +32,25 @@ export function MyTickets({ refreshKey }: { refreshKey: number }) {
 
   return (
     <section className="w-full max-w-xl flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">Mis tickets</h2>
+      <h2 className="text-lg font-semibold">My tickets</h2>
       {tickets.map((t) => (
         <article key={t.ticketId} className="rounded-xl border border-black/10 dark:border-white/15 p-4 flex flex-col gap-2">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-medium">{t.title}</p>
               <p className="text-sm opacity-70">
-                {new Date(t.startsAt).toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" })} ·{" "}
+                {new Date(t.startsAt).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })} ·{" "}
                 {[t.venue, t.city].filter(Boolean).join(", ")} · reserva #{t.bookingId}
               </p>
             </div>
             {t.checkedInAt ? (
-              <span className="text-sm text-green-700 dark:text-green-400 whitespace-nowrap">Check-in hecho ✓</span>
+              <span className="text-sm text-green-700 dark:text-green-400 whitespace-nowrap">Checked in ✓</span>
             ) : (
               <button
                 onClick={() => setOpen(open === t.ticketId ? null : t.ticketId)}
                 className="rounded-full border border-black/15 dark:border-white/20 px-3 h-8 text-sm whitespace-nowrap"
               >
-                {open === t.ticketId ? "Ocultar QR" : "Mostrar QR"}
+                {open === t.ticketId ? "Hide QR" : "Show QR"}
               </button>
             )}
           </div>
@@ -96,10 +96,10 @@ function TicketQr({ ticketId }: { ticketId: string }) {
   return (
     <div className="flex flex-col items-center gap-2 py-2">
       {/* eslint-disable-next-line @next/next/no-img-element -- data URL, nothing to optimize */}
-      <img src={image} alt="QR de check-in" width={240} height={240} className="rounded-lg bg-white p-2" />
-      <p className="text-xs opacity-60 text-center">Muéstralo en la entrada. Cambia cada minuto.</p>
+      <img src={image} alt="Ticket check-in QR code" width={240} height={240} className="rounded-lg bg-white p-2" />
+      <p className="text-xs opacity-60 text-center">Show this at the entrance. It refreshes every minute.</p>
       <details className="text-xs opacity-60">
-        <summary className="cursor-pointer">Código para pegar a mano</summary>
+        <summary className="cursor-pointer">Manual ticket code</summary>
         <code className="break-all">{payload}</code>
       </details>
     </div>

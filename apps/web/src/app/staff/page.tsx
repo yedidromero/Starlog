@@ -72,7 +72,7 @@ export default function StaffCheckIn() {
         frame = requestAnimationFrame(tick);
       })
       .catch(() => {
-        setError("No se pudo abrir la cámara. Pega el código a mano.");
+        setError("Could not open the camera. Paste the ticket code below.");
         setScanning(false);
       });
 
@@ -85,14 +85,14 @@ export default function StaffCheckIn() {
 
   return (
     <main className="min-h-screen flex flex-col items-center gap-6 p-8">
-      <h1 className="text-2xl font-semibold">Check-in · staff</h1>
+      <h1 className="text-2xl font-semibold">Staff check-in</h1>
 
       <div className="w-full max-w-sm flex flex-col gap-3">
         {scanning ? (
           <>
             <video ref={video} className="w-full rounded-xl bg-black" muted playsInline />
             <button onClick={() => setScanning(false)} className="underline text-sm">
-              Cancelar
+              Cancel
             </button>
           </>
         ) : (
@@ -101,7 +101,7 @@ export default function StaffCheckIn() {
             disabled={busy}
             className="rounded-full bg-foreground text-background h-11 font-medium disabled:opacity-40"
           >
-            Escanear QR con la cámara
+            Scan ticket QR
           </button>
         )}
         <canvas ref={canvas} className="hidden" />
@@ -116,24 +116,24 @@ export default function StaffCheckIn() {
           <input
             value={manual}
             onChange={(e) => setManual(e.target.value)}
-            placeholder="…o pega el código del ticket"
+            placeholder="Or paste the ticket code"
             className="flex-1 rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 h-10 text-sm"
           />
           <button disabled={busy || !manual.trim()} className="rounded-lg border px-3 h-10 text-sm disabled:opacity-40">
-            Validar
+            Validate
           </button>
         </form>
 
-        {busy && <p className="text-sm opacity-70">Validando y emitiendo el sello…</p>}
+        {busy && <p className="text-sm opacity-70">Validating ticket and issuing the stamp…</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
         {result && (
           <div className="rounded-xl border border-green-600/40 bg-green-600/10 p-4 text-sm flex flex-col gap-1">
-            <p className="font-medium">✓ Check-in correcto · {result.event}</p>
+            <p className="font-medium">✓ Check-in complete · {result.event}</p>
             <p className="font-mono text-xs break-all">{result.attendee}</p>
             <p>
               {result.stamp
-                ? `Sello #${result.stamp.tokenId} emitido (+100 XP).`
-                : "Ya tenía el sello de este evento."}
+                ? `Stamp #${result.stamp.tokenId} issued (+100 XP).`
+                : "This traveler already has a stamp for this event."}
             </p>
           </div>
         )}

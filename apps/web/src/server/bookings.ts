@@ -9,8 +9,25 @@ import { priceTicket, ticketDeadlines } from "./pricing";
 const { bookings, events, organizers, quotes, tickets } = schema;
 
 export class BookingError extends Error {
-  constructor(message: string, readonly status = 400) {
+  constructor(message: string, readonly status = 400, readonly code?: string) {
     super(message);
+  }
+}
+
+async function buildTravelerFundTx(bookingId: bigint, wallet: string) {
+  try {
+    return await chain.buildFundTx(bookingId, wallet);
+  } catch (err) {
+    // Stellar Testnet accounts must be activated before Soroban can simulate a
+    // transaction on their behalf. Surface this expected setup step to the UI.
+    if (err instanceof Error && /account not found:/i.test(err.message)) {
+      throw new BookingError(
+        "Your Pollar wallet is not active on Stellar Testnet yet. Activate it, then retry your purchase.",
+        409,
+        "wallet_not_activated",
+      );
+    }
+    throw err;
   }
 }
 
@@ -96,7 +113,7 @@ export async function startTicketBooking(session: Session, eventId: number) {
       .update(bookings)
       .set({ txHashes: { create: createHash }, updatedAt: new Date() })
       .where(eq(bookings.id, booking.id));
-    const fundXdr = await chain.buildFundTx(BigInt(booking.id), session.wallet);
+    const fundXdr = await buildTravelerFundTx(BigInt(booking.id), session.wallet);
     return { bookingId: booking.id, price, payBefore: deadlines.payBefore, fundXdr, alreadyPaid: false };
   } catch (err) {
     await database.update(bookings).set({ status: "failed", updatedAt: new Date() }).where(eq(bookings.id, booking.id));
@@ -137,7 +154,7 @@ async function resumeOwnBooking(session: Session, eventId: number, ticketPrice: 
     return { ...base, fundXdr: null, alreadyPaid: true };
   }
   if (onChain?.status.tag === "Pending" && mine.payBefore > new Date()) {
-    return { ...base, fundXdr: await chain.buildFundTx(BigInt(mine.id), session.wallet), alreadyPaid: false };
+    return { ...base, fundXdr: await buildTravelerFundTx(BigInt(mine.id), session.wallet), alreadyPaid: false };
   }
   await database.update(bookings).set({ status: "expired", updatedAt: new Date() }).where(eq(bookings.id, mine.id));
   return null;
