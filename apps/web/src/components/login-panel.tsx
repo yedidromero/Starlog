@@ -22,6 +22,8 @@ type Props = {
 export function LoginPanel({ user, onUserChange, appearance = "default" }: Props) {
   const accountAppearance = appearance === "account";
   const { isAuthenticated, verified, wallet, openLoginModal, logout, getClient } = usePollar();
+  const [providerProfile, setProviderProfile] = useState({ name: "Starlog traveler", avatar: "" });
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // Only try automatically once per address, so a failure doesn't loop.
@@ -37,6 +39,18 @@ export function LoginPanel({ user, onUserChange, appearance = "default" }: Props
     show(client.getAuthState());
     return client.onAuthStateChange(show);
   }, [getClient]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !verified) {
+      setProviderProfile({ name: "Starlog traveler", avatar: "" });
+      setAvatarFailed(false);
+      return;
+    }
+    const profile = getClient().getUserProfile();
+    const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
+    setProviderProfile({ name: name || "Starlog traveler", avatar: profile?.avatar ?? "" });
+    setAvatarFailed(false);
+  }, [getClient, isAuthenticated, verified, wallet?.address]);
 
   const linkSession = useCallback(async () => {
     if (!wallet?.address) return;
@@ -73,7 +87,17 @@ export function LoginPanel({ user, onUserChange, appearance = "default" }: Props
 
   if (appearance === "home") {
     if (user) {
-      return <Link href="/mi-starlog" className="account-shortcut" aria-label="Open My Starlog"><span>ST</span><b>MY STARLOG</b></Link>;
+      const initials = providerProfile.name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toUpperCase() || "ST";
+      return (
+        <Link href="/mi-starlog" className="account-shortcut" aria-label={`Open ${providerProfile.name}'s Starlog profile`}>
+          <span className="account-shortcut-avatar">
+            {providerProfile.avatar && !avatarFailed
+              ? <img src={providerProfile.avatar} alt="" onError={() => setAvatarFailed(true)} />
+              : initials}
+          </span>
+          <b>MY STARLOG</b>
+        </Link>
+      );
     }
     return (
       <div className="home-login-control">

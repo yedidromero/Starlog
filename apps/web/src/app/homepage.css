@@ -124,13 +124,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   background: var(--deep-petroleum) !important;
   color: var(--linen) !important;
   box-shadow: 4px 4px 0 var(--dark-copper) !important;
-  font: 700 9px "IBM Plex Mono", monospace !important;
+  font: 700 13px "IBM Plex Mono", monospace !important;
   letter-spacing: 1px !important;
   transition: transform .12s, box-shadow .12s !important;
 }
 .wallet-connect-button:hover:not(:disabled) { transform: translate(2px,2px) !important; box-shadow: 2px 2px 0 var(--dark-copper) !important; }
 .wallet-button-icon { width: 22px !important; height: 22px !important; display: grid !important; place-items: center !important; border-radius: 0 !important; background: rgba(217,160,126,.12) !important; color: var(--light-copper) !important; }
-.wallet-network-label { padding: 3px 4px !important; border: 1px solid var(--mist-blue) !important; border-radius: 0 !important; background: transparent !important; color: var(--light-copper) !important; font: 600 7px "IBM Plex Mono", monospace !important; letter-spacing: .8px !important; }
+.wallet-network-label { padding: 3px 5px !important; border: 1px solid var(--mist-blue) !important; border-radius: 0 !important; background: transparent !important; color: var(--light-copper) !important; font: 600 9px "IBM Plex Mono", monospace !important; letter-spacing: .8px !important; }
 .wallet-status-dot { border-radius: 0 !important; background: var(--copper) !important; box-shadow: none !important; }
 .wallet-status-connected { background: #69A68E !important; }
 .wallet-popover {
@@ -482,8 +482,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .assistant-livekit-controls [data-lk-theme] { --lk-bg: var(--linen); --lk-fg: var(--petroleum); }
 
 /* Logged-in Starlog account */
-.account-shortcut { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 3px 8px 3px 3px; border: 1px solid rgba(217,160,126,.6); color: var(--linen); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .75px; white-space: nowrap; }
-.account-shortcut > span { width: 28px; height: 28px; display: grid; place-items: center; background: var(--copper); color: var(--deep-petroleum); font-size: 8px; }
+.account-shortcut { min-height: 48px; display: inline-flex; align-items: center; gap: 10px; padding: 4px 12px 4px 4px; border: 1px solid rgba(217,160,126,.6); color: var(--linen); font: 700 12px "IBM Plex Mono", monospace; letter-spacing: .55px; white-space: nowrap; }
+.account-shortcut > .account-shortcut-avatar { width: 38px; height: 38px; display: grid; place-items: center; overflow: hidden; background: var(--copper); color: var(--deep-petroleum); font-size: 12px; }
+.account-shortcut-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .account-shortcut:hover { border-color: var(--light-copper); background: rgba(217,160,126,.08); }
 .account-icon { width: 17px; height: 17px; flex: 0 0 auto; }
 .account-page { min-height: 100vh; overflow: clip; background-color: var(--deep-petroleum); background-image: radial-gradient(rgba(74,124,140,.16) .65px, transparent .75px); background-size: 24px 24px; color: var(--linen); }
@@ -690,8 +691,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width: 1220px) {
   .account-header { padding-inline: 26px; }
   .account-frame { width: calc(100% - 52px); grid-template-columns: 170px minmax(0,1fr); gap: 33px; }
-  .account-shortcut > b { display: none; }
-  .account-shortcut { padding-right: 3px; }
+  .account-shortcut > b { display: inline; }
+  .account-shortcut { min-height: 44px; padding-right: 10px; font-size: 11px; }
   .account-feature-trip { grid-template-columns: 1.1fr .9fr; }
   .account-feature-copy { padding-inline: 22px; }
   .account-trip-details { grid-template-columns: 1fr; gap: 10px; }
@@ -931,7 +932,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .desktop-nav { gap: 10px; }
   .desktop-nav a { font-size: 12px; letter-spacing: .55px; }
   .header-actions { gap: 10px; }
-  .wallet-connect-button { padding-inline: 9px !important; font-size: 8px !important; }
+  .wallet-connect-button { padding-inline: 12px !important; font-size: 12px !important; }
   .hero-card { min-height: 470px; }
   .hero-title { font-size: clamp(5.8rem, 10vw, 9.5rem); }
   .trip-grid { gap: 17px; }
@@ -1691,9 +1692,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 }
 
 .home-login-control { display: grid; justify-items: end; gap: 7px; }
-.home-login-status { margin: 0; color: var(--fog); font: 600 9px/1.5 "IBM Plex Mono", monospace; letter-spacing: .35px; }
+.home-login-status { margin: 0; color: var(--fog); font: 600 12px/1.5 "IBM Plex Mono", monospace; letter-spacing: .35px; }
 .home-login-error { max-width: 260px; margin: 0; color: #f1a59a; font-size: 11px; line-height: 1.4; }
 .home-login-error button { border: 0; padding: 0; background: transparent; color: var(--light-copper); text-decoration: underline; }
+.header-actions .wallet-connect-button { min-height: 46px !important; padding-inline: 15px !important; font-size: 13px !important; }
+.header-actions .wallet-connect-button > span:first-child { font-size: 13px !important; }
+.header-actions .account-shortcut { min-height: 48px; font-size: 12px; }
+.header-actions .account-shortcut-avatar { width: 38px; height: 38px; font-size: 12px; }
+@media (max-width: 760px) {
+  .header-actions .wallet-connect-button { width: auto !important; min-width: 0 !important; min-height: 44px !important; padding: 0 12px !important; overflow: visible !important; gap: 0 !important; font-size: 13px !important; }
+  .header-actions .wallet-connect-button > span:first-child { font-size: 13px !important; }
+  .header-actions .wallet-connect-button .wallet-network-label { display: none !important; }
+  .header-actions .account-shortcut { min-height: 44px; padding-right: 9px; font-size: 11px; }
+  .header-actions .account-shortcut-avatar { width: 34px; height: 34px; font-size: 11px; }
+}
 .live-event-panel { margin-top: 42px; }
 .home-event-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; width: 100%; }
 .event-list-empty { grid-column: 1 / -1; color: var(--fog); font-size: 15px; }
