@@ -27,7 +27,6 @@ flowchart LR
   Guide --> Duffel[Duffel sandbox]
   Agent --> Web[Booking portal and backend]
   MCP --> Web
-  Guide --> MariaDB[(MariaDB)]
   Web --> Stellar[Stellar Testnet]
   Stellar --> Soroban[Soroban contracts]
   Traveler --> Pollar[Pollar wallet]
@@ -39,7 +38,7 @@ The traveler’s Pollar wallet and the MCP agent’s Stellar wallet are separate
 
 | Path | Purpose |
 |---|---|
-| apps/web | Booking portal, authentication, backend API, database, and Stellar payment flows. |
+| apps/web | Booking portal, authentication, backend API, and Stellar payment flows. |
 | apps/guide-web | Traveler guide, recommendations, flight search, and assistant interface. |
 | apps/agent | LiveKit text and voice agent. |
 | mcp | Estela tools for event search, flight search, quotes, and Testnet bookings. |
@@ -72,7 +71,7 @@ Fill in the environment values before starting the app.
 
 ### Traveler guide
 
-Configure apps/guide-web/.env.local using [apps/guide-web/.env.example](apps/guide-web/.env.example). The guide uses MariaDB, Duffel sandbox, and optional Pollar Testnet settings.
+Configure apps/guide-web/.env.local using [apps/guide-web/.env.example](apps/guide-web/.env.example). The guide uses Duffel sandbox and optional Pollar Testnet settings.
 
 ~~~powershell
 cd apps/guide-web
@@ -111,7 +110,7 @@ npm run setup:testnet
 node --env-file=.env.local src/index.mjs
 ~~~
 
-The wallet setup stores its secret in the ignored mcp/.env.local file. Fund the agent with Testnet USDC before using paid search and quote tools. Never commit wallet secrets, API tokens, or database credentials.
+The wallet setup stores its secret in the ignored mcp/.env.local file. Fund the agent with Testnet USDC before using paid search and quote tools. Never commit wallet secrets or API tokens.
 
 ## Testnet and sandbox
 
