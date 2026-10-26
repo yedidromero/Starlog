@@ -1,11 +1,11 @@
 {
-  "name": "estela-mcp",
+  "name": "starlog-mcp",
   "version": "0.1.0",
   "private": true,
-  "description": "MCP server that lets AI agents find events, pay for flight searches (x402) and book trips with Estela on Stellar.",
+  "description": "Starlog MCP lets AI agents find events, pay for flight searches (x402), and book test trips on Stellar.",
   "type": "module",
   "bin": {
-    "estela-mcp": "src/index.mjs"
+    "starlog-mcp": "src/index.mjs"
   },
   "scripts": {
     "start": "node src/index.mjs",

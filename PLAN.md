@@ -370,7 +370,7 @@ Agente ← 200 + el recurso
 8. A quién va el XP: en el MVP a la wallet que paga (la del agente). Para dárselo al viajero real, ver **X4**.
 
 **X3 · Que los agentes encuentren a Estela**
-9. Publicar un **servidor MCP de Estela** (herramientas `buscar_eventos`, `buscar_vuelos`, `cotizar`, `reservar`) y/o un OpenAPI en `/api/agent/openapi.json`; opcional, catálogo **Bazaar** de Vellar.
+9. Publicar **Starlog MCP** (herramientas `buscar_eventos`, `buscar_vuelos`, `cotizar`, `reservar`) y/o un OpenAPI en `/api/agent/openapi.json`; opcional, catálogo **Bazaar** de Vellar.
 10. Demo de hackathon: **Claude busca, cotiza y reserva** un viaje a un evento pagando en USDC desde su propia wallet.
 
 **X4 · El agente paga, el viajero recibe** (pendiente)

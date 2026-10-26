@@ -11,7 +11,7 @@ Starlog is a travel and activities prototype with a text and voice assistant. Th
 - A booking portal with Pollar authentication, a Stellar wallet, and a wallet balance view.
 - A traveler guide with sample recommendations for Madrid, València, and Barcelona.
 - A text and voice travel assistant powered by LiveKit.
-- Duffel sandbox flight search and Estela MCP tools for event search, quotes, and Testnet bookings.
+- Duffel sandbox flight search and Starlog MCP tools for event search, quotes, and Testnet bookings.
 - Soroban contracts and TypeScript bindings for escrow and two OpenZeppelin-based NFTs: Estela Pass and Estela Stamps.
 
 A flight search or quote does not create a booking. The booking flow requires passenger details and explicit confirmation of the amount. Testnet payments and sandbox orders are not real travel purchases.
@@ -34,7 +34,7 @@ flowchart LR
   Traveler --> Guide[Guide web app]
   Guide --> LiveKit[LiveKit]
   LiveKit --> Agent[Starlog voice agent]
-  Agent --> MCP[Estela MCP tools]
+  Agent --> MCP[Starlog MCP]
   Guide --> Duffel[Duffel sandbox]
   Agent --> Web[Booking portal and backend]
   MCP --> Web
@@ -52,7 +52,7 @@ The traveler’s Pollar wallet and the MCP agent’s Stellar wallet are separate
 | apps/web | Booking portal, authentication, backend API, and Stellar payment flows. |
 | apps/guide-web | Traveler guide, recommendations, flight search, and assistant interface. |
 | apps/agent | LiveKit text and voice agent. |
-| mcp | Estela tools for event search, flight search, quotes, and Testnet bookings. |
+| mcp | Starlog MCP tools for event search, flight search, quotes, and Testnet bookings. |
 | contracts | Soroban contract source code. |
 | packages | TypeScript bindings for the contracts. |
 | knowledge | Sample destination guide content for Madrid, València, and Barcelona. |
@@ -107,7 +107,7 @@ pnpm dev
 
 The Windows NODE_OPTIONS setting lets the agent use the system certificates when connecting to LiveKit Cloud.
 
-### Estela MCP tools
+### Starlog MCP tools
 
 The LiveKit agent starts the MCP server when STARLOG_MCP_DIR and the Testnet agent wallet are configured. Set ESTELA_URL in mcp/.env.local to the backend address, such as http://localhost:3002.
 

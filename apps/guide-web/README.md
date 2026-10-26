@@ -29,7 +29,7 @@ Para las cotizaciones y reservas mediante Estela, arranca el backend `apps/web` 
 
 - Recomendaciones y guía conversacional por texto y voz.
 - Guías de Madrid, Valencia y Barcelona en `knowledge/`.
-- Búsqueda de vuelos Duffel sandbox y cotizaciones testnet mediante Estela MCP.
+- Búsqueda de vuelos Duffel sandbox y cotizaciones testnet mediante Starlog MCP.
 - Pollar en Stellar testnet cuando se configura `NEXT_PUBLIC_POLLAR_API_KEY` y el dominio permitido en Pollar.
 - Musement sandbox solo con credenciales de partner; por defecto no se crean pedidos.
 

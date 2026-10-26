@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Estela MCP server (stdio): lets an AI agent find Stellar events, search and quote
+// Starlog MCP server (stdio): lets an AI agent find Stellar events, search and quote
 // flights (paid per call with x402, in USDC) and book trips through Estela's escrow.
 //   ESTELA_AGENT_SECRET=S... [ESTELA_URL=http://localhost:3000] node src/index.mjs
 // stdout belongs to the MCP protocol: only log to stderr.
@@ -151,4 +151,4 @@ server.registerTool(
 );
 
 await server.connect(new StdioServerTransport());
-console.error(`Estela MCP ready (agent ${estela.wallet.slice(0, 8)}…)`);
+console.error(`Starlog MCP ready (agent ${estela.wallet.slice(0, 8)}…)`);

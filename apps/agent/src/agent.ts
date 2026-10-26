@@ -23,7 +23,7 @@ if (mcpDirectory) config({ path: join(mcpDirectory, ".env.local") });
 
 function createEstelaToolset() {
   if (!mcpDirectory || !existsSync(join(mcpDirectory, "src", "index.mjs")) || !process.env.ESTELA_AGENT_SECRET) {
-    console.warn("[starlog] Estela MCP is not configured; payment tools are unavailable.");
+    console.warn("[starlog] Starlog MCP is not configured; payment tools are unavailable.");
     return null;
   }
 

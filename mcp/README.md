@@ -1,6 +1,6 @@
-# Estela MCP
+# Starlog MCP
 
-MCP server (stdio) that lets an AI agent travel to Stellar events with Estela:
+Starlog MCP is a stdio server that lets an AI agent find events and book test trips through the Estela backend:
 
 | Tool | What it does | Cost |
 |---|---|---|
@@ -34,7 +34,7 @@ committed to Git.
 ## Add to Claude Code
 
 ```bash
-claude mcp add estela \
+claude mcp add starlog \
   --env ESTELA_AGENT_SECRET=S... \
   --env ESTELA_URL=http://localhost:3000 \
   -- node /absolute/path/to/mcp/src/index.mjs

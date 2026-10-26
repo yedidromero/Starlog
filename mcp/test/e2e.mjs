@@ -1,4 +1,4 @@
-// Drives the Estela MCP server exactly like an MCP host (Claude) would, over stdio.
+// Drives the Starlog MCP server exactly like an MCP host (Claude) would, over stdio.
 //   ESTELA_AGENT_SECRET=S... [RUN_BOOKING=1] node test/e2e.mjs
 // Without RUN_BOOKING only free and x402-paid read tools run (≈0.015 USDC).
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
