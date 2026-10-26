@@ -1,7 +1,7 @@
 "use client";
 
 import { usePollar } from "@pollar/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { post } from "@/lib/api";
 import { confirmWithRetry } from "@/lib/bookings";
 import { formatAmount } from "@/server/pricing";
@@ -19,8 +19,6 @@ type EventItem = {
   currency: string;
 };
 
-type Membership = { xp: number; level: string; discountBps: number; passId: number | null };
-
 type Started = {
   bookingId: number;
   /** Null when the booking was already paid and only needs confirming. */
@@ -31,18 +29,10 @@ type Started = {
 
 type Purchase = { busy: boolean; message?: string; error?: string };
 
-const LEVEL_NAMES: Record<string, string> = {
-  Explorer: "Explorer",
-  Voyager: "Voyager",
-  Globetrotter: "Globetrotter",
-  Legend: "Legend",
-};
-
 /** Upcoming events with a "buy ticket" flow: reserve, pay with Pollar, confirm. */
-export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPurchased: () => void }) {
+export function EventsList({ signedIn }: { signedIn: boolean }) {
   const { signAndSubmitTx } = usePollar();
   const [events, setEvents] = useState<EventItem[] | null>(null);
-  const [membership, setMembership] = useState<Membership | null>(null);
   const [purchases, setPurchases] = useState<Record<number, Purchase>>({});
 
   useEffect(() => {
@@ -50,15 +40,6 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
       .then((res) => (res.ok ? res.json() : []))
       .then(setEvents);
   }, []);
-
-  const loadMembership = useCallback(() => {
-    if (!signedIn) return setMembership(null);
-    fetch("/api/me/membership")
-      .then((res) => (res.ok ? res.json() : null))
-      .then(setMembership);
-  }, [signedIn]);
-
-  useEffect(loadMembership, [loadMembership]);
 
   const track = (id: number, p: Purchase) => setPurchases((all) => ({ ...all, [id]: p }));
 
@@ -87,8 +68,6 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
         busy: false,
         message: `Done! Booking #${confirmed.bookingId} is confirmed and your ticket is ready.${saved}`,
       });
-      loadMembership();
-      onPurchased();
     } catch (err) {
       track(event.id, { busy: false, error: err instanceof Error ? err.message : String(err) });
     }
@@ -98,28 +77,6 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
 
   return (
     <section id="viajes" className="w-full max-w-xl flex flex-col gap-4">
-      {membership && (
-        <div className="rounded-xl border border-black/10 dark:border-white/15 p-4 text-sm flex flex-col gap-3">
-          {membership.passId !== null && (
-            // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG from our API
-            <img
-              src={`/api/meta/pass/${membership.passId}/image?xp=${membership.xp}`}
-              alt={`Estela Pass, ${membership.level} level`}
-              width={400}
-              height={250}
-              className="w-full h-auto rounded-xl"
-            />
-          )}
-          <div>
-            <p className="font-medium">Estela Pass · {LEVEL_NAMES[membership.level] ?? membership.level}</p>
-            <p className="opacity-70">
-              {membership.xp} XP · {membership.discountBps / 100}% off future bookings
-              {membership.passId === null && " · your pass is minted with your first booking"}
-            </p>
-          </div>
-        </div>
-      )}
-
       {events.length === 0 && <p className="text-sm opacity-70">There are no upcoming events.</p>}
 
       {events.map((event) => {
@@ -151,10 +108,6 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
             {signedIn && event.airport && (
               <FlightPackage
                 event={event}
-                onBooked={() => {
-                  loadMembership();
-                  onPurchased();
-                }}
               />
             )}
           </article>

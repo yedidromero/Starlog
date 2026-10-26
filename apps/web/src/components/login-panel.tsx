@@ -2,6 +2,7 @@
 
 import { usePollar } from "@pollar/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { post } from "@/lib/api";
 
 export type EstelaUser = { userId?: string; id?: string; wallet: string; role: string };
@@ -10,7 +11,7 @@ type Props = {
   /** The Estela session, or null; owned by the page so other components can use it. */
   user: EstelaUser | null;
   onUserChange: (user: EstelaUser | null) => void;
-  appearance?: "default" | "account";
+  appearance?: "default" | "account" | "home";
 };
 
 /**
@@ -69,6 +70,23 @@ export function LoginPanel({ user, onUserChange, appearance = "default" }: Props
     attempted.current = address;
     void linkSession();
   }, [isAuthenticated, verified, wallet?.address, user?.wallet, linkSession]);
+
+  if (appearance === "home") {
+    if (user) {
+      return <Link href="/mi-starlog" className="rounded-full border border-black/15 dark:border-white/20 px-5 py-3 text-sm font-medium">MY STARLOG</Link>;
+    }
+    return (
+      <div className="flex flex-col items-center gap-3 text-sm">
+        {!isAuthenticated ? (
+          <button onClick={openLoginModal} className="rounded-full bg-foreground text-background px-6 h-12 font-medium" type="button">SIGN IN</button>
+        ) : (
+          <p>{busy ? "Connecting your Starlog account…" : "Connecting your account…"}</p>
+        )}
+        {error && <p className="text-red-600 max-w-md text-center">{error} <button onClick={linkSession} className="underline">RETRY</button></p>}
+        {pollarError && <p className="text-red-600 max-w-md text-center">{pollarError}</p>}
+      </div>
+    );
+  }
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });

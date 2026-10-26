@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FlightPackage } from "@/components/flight-package";
 import { LoginPanel, type EstelaUser } from "@/components/login-panel";
+import { MyTickets } from "@/components/my-tickets";
 
 type Booking = {
   id: number;
@@ -323,6 +324,7 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
               {data && visiblePurchases.length === 0 && <p className="account-empty-inline">Your completed ticket, flight and travel package purchases will appear here.</p>}
               {data?.demoMode && <p className="account-demo-note"><span>i</span> Sample purchase history from your original profile template. No charges were made and no tickets were issued.</p>}
             </div>
+            <MyTickets refreshKey={bookingRefresh} />
           </section>
 
           <section className="account-profile" id="perfil" aria-labelledby="profile-title">

@@ -27,7 +27,7 @@ const compactInput = "rounded-lg border border-black/15 dark:border-white/20 bg-
 const time = (iso: string) => iso.slice(11, 16);
 
 /** "Add a flight": search Duffel, pick an offer, enter the passenger, pay with Pollar. */
-export function FlightPackage({ event, onBooked, profileSearch = false }: { event?: EventInfo; onBooked: () => void; profileSearch?: boolean }) {
+export function FlightPackage({ event, onBooked, profileSearch = false }: { event?: EventInfo; onBooked?: () => void; profileSearch?: boolean }) {
   const { signAndSubmitTx } = usePollar();
   const input = profileSearch
     ? "rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-4 h-12 text-base"
@@ -91,7 +91,7 @@ export function FlightPackage({ event, onBooked, profileSearch = false }: { even
       );
       setChosen(null);
       setOffers(null);
-      onBooked();
+      onBooked?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
