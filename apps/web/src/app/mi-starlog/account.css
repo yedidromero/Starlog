@@ -96,6 +96,9 @@
 .account-trip-footnote { display: flex; justify-content: space-between; gap: 12px; margin-top: 15px; color: var(--mist-blue); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .45px; }
 .account-trip-footnote > span:first-child { display: inline-flex; align-items: center; gap: 6px; color: #90B9A5; }
 .account-trip-footnote .account-icon { width: 13px; height: 13px; }
+.account-status-sample, .account-trip-demo-label { color: var(--dark-copper); }
+.account-status-sample i { background: var(--copper); }
+.account-trip-demo-label { font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .45px; }
 .account-recommendations, .account-purchases, .account-profile { padding-top: 66px; scroll-margin-top: 98px; }
 .account-recommendation-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 13px; }
 .account-recommendation-card { min-width: 0; border: 1px solid var(--mist-blue); background: var(--linen); color: var(--petroleum); }

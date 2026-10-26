@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import type { Session } from "./auth/session";
 import { db, schema } from "./db";
 import * as duffel from "./duffel";
+import { env } from "./env";
 import { formatAmount } from "./pricing";
 
 type ItineraryLeg = {
@@ -56,7 +57,7 @@ export async function myBookings(session: Session) {
     .where(eq(bookings.userId, session.userId))
     .orderBy(desc(bookings.createdAt));
 
-  return Promise.all(rows.map(async (row, index) => {
+  const accountBookings = await Promise.all(rows.map(async (row, index) => {
     let legs = itinerary(row.quoteItems);
     let liveBookingReference = bookingReference(row.quoteItems);
     // Older quotes did not persist the route. Hydrate only the 10 most recent such
@@ -90,4 +91,11 @@ export async function myBookings(session: Session) {
       hasDuffelOrder: Boolean(row.duffelOrderId),
     };
   }));
+
+  return {
+    bookings: accountBookings,
+    // Sample profile history is only enabled on Stellar testnet and only for an
+    // account with no real bookings. It is never written to the database or chain.
+    demoMode: accountBookings.length === 0 && env().STELLAR_NETWORK_PASSPHRASE === "Test SDF Network ; September 2015",
+  };
 }

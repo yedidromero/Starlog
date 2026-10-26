@@ -22,6 +22,9 @@ type Booking = {
   eventCountry: string | null;
   airlineBookingReference: string | null;
   hasDuffelOrder: boolean;
+  isDemo?: boolean;
+  sampleOrderRef?: string;
+  samplePaymentNote?: string;
 };
 
 type Stamp = { tokenId: number; kind: "event" | "trip"; refId: number; createdAt: string };
@@ -29,8 +32,41 @@ type StampAttribute = { trait_type: string; value: string | number };
 type StampMetadata = { name: string; description: string; image: string; attributes: StampAttribute[] };
 type Membership = { xp: number; level: string; discountBps: number; passId: number | null };
 type EventItem = { id: number; title: string; description: string | null; city: string; airport: string | null; country: string; startsAt: string; ticketPrice: string | null; currency: string };
-type AccountData = { bookings: Booking[]; stamps: Stamp[]; stampMetadata: Record<number, StampMetadata>; membership: Membership | null; events: EventItem[] };
+type AccountData = { bookings: Booking[]; demoMode: boolean; stamps: Stamp[]; stampMetadata: Record<number, StampMetadata>; membership: Membership | null; events: EventItem[] };
+type BookingsResponse = { bookings: Booking[]; demoMode: boolean };
 type ProviderProfile = { name: string; email: string; avatar: string };
+
+const DEMO_DESTINATIONS = [
+  { place: "Venice", country: "Italy", year: "2025", code: "IT", style: "destination-memory-venice" },
+  { place: "Cairo + Giza", country: "Egypt", year: "2025", code: "EG", style: "destination-memory-egypt" },
+  { place: "Jerusalem", country: "Israel", year: "2024", code: "IL", style: "destination-memory-israel" },
+] as const;
+
+const DEMO_ITINERARY: Booking = {
+  id: 842,
+  kind: "travel",
+  currency: "USDC",
+  amount: "43",
+  status: "demo",
+  createdAt: "2026-10-01T12:00:00.000Z",
+  destination: "Madrid",
+  origin: "Valencia",
+  departureAt: "2026-11-10T12:00:00.000Z",
+  returnAt: "2026-11-12T12:00:00.000Z",
+  eventTitle: "Bryan Adams · Movistar Arena",
+  eventCity: "Madrid",
+  eventCountry: "Spain",
+  airlineBookingReference: null,
+  hasDuffelOrder: false,
+  isDemo: true,
+  sampleOrderRef: "ST-00842",
+};
+
+const DEMO_PURCHASES: Booking[] = [
+  { id: 631, kind: "ticket", currency: "USDC", amount: "44", status: "demo", createdAt: "2026-06-18T12:00:00.000Z", destination: "Valencia", origin: null, departureAt: null, returnAt: null, eventTitle: "Albufera · bus and boat", eventCity: "Valencia", eventCountry: "Spain", airlineBookingReference: null, hasDuffelOrder: false, isDemo: true, sampleOrderRef: "ST-00631", samplePaymentNote: "≈ 44 EUR · 2 guests" },
+  { id: 418, kind: "ticket", currency: "USDC", amount: "17", status: "demo", createdAt: "2026-03-22T12:00:00.000Z", destination: "Barcelona", origin: null, departureAt: null, returnAt: null, eventTitle: "Park Güell · guided visit", eventCity: "Barcelona", eventCountry: "Spain", airlineBookingReference: null, hasDuffelOrder: false, isDemo: true, sampleOrderRef: "ST-00418", samplePaymentNote: "≈ 17 EUR · 1 guest" },
+  { id: 297, kind: "ticket", currency: "EUR", amount: "12", status: "demo", createdAt: "2026-02-09T12:00:00.000Z", destination: "Madrid", origin: null, departureAt: null, returnAt: null, eventTitle: "Stellar Community Brunch", eventCity: "Madrid", eventCountry: "Spain", airlineBookingReference: null, hasDuffelOrder: false, isDemo: true, sampleOrderRef: "ST-00297", samplePaymentNote: "1 guest" },
+];
 
 const SECTIONS = [
   { id: "resumen", number: "01", label: "OVERVIEW", icon: "grid" },
@@ -143,8 +179,8 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
     async function load() {
       setLoadError("");
       try {
-        const [bookings, stamps, membership, events] = await Promise.all([
-          jsonOrThrow<Booking[]>("/api/me/bookings"),
+        const [bookingResponse, stamps, membership, events] = await Promise.all([
+          jsonOrThrow<BookingsResponse>("/api/me/bookings"),
           jsonOrThrow<Stamp[]>("/api/me/stamps"),
           jsonOrThrow<Membership>("/api/me/membership").catch(() => null),
           jsonOrThrow<EventItem[]>("/api/events").catch(() => []),
@@ -159,7 +195,8 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
         }));
         if (!active) return;
         setData({
-          bookings,
+          bookings: bookingResponse.bookings,
+          demoMode: bookingResponse.demoMode,
           stamps,
           stampMetadata: Object.fromEntries(metadataEntries.filter((entry): entry is NonNullable<typeof entry> => entry !== null)),
           membership,
@@ -190,16 +227,18 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
   }, [data]);
 
   const travelBookings = useMemo(() => (data?.bookings ?? []).filter((booking) => booking.kind !== "ticket"), [data?.bookings]);
-  const upcomingTrip = travelBookings
+  const nextConfirmedTrip = travelBookings
     .filter((booking) => booking.status === "confirmed" && booking.departureAt && new Date(booking.departureAt).getTime() >= Date.now())
     .sort((a, b) => new Date(a.departureAt!).getTime() - new Date(b.departureAt!).getTime())[0];
+  const upcomingTrip = nextConfirmedTrip ?? (data?.demoMode ? DEMO_ITINERARY : undefined);
   const visitedPlaces = useMemo(() => {
     const places = [
       ...travelBookings.map((booking) => booking.destination),
       ...(data?.stamps ?? []).filter((stamp) => stamp.kind === "trip").map((stamp) => stampMetadataAttribute(data?.stampMetadata[stamp.tokenId], "Place")),
+      ...(data?.demoMode ? DEMO_DESTINATIONS.map((destination) => destination.place) : []),
     ];
     return [...new Set(places.filter((place): place is string => Boolean(place)).map((place) => place.trim()).filter(Boolean))];
-  }, [data?.stampMetadata, data?.stamps, travelBookings]);
+  }, [data?.demoMode, data?.stampMetadata, data?.stamps, travelBookings]);
   const recommendations = useMemo(() => {
     const knownPlaces = new Set(visitedPlaces.map(normalizePlace));
     const knownAirports = new Set(travelBookings.map((booking) => booking.destination?.toUpperCase()).filter((code): code is string => Boolean(code && /^[A-Z]{3}$/.test(code))));
@@ -208,6 +247,7 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
   }, [data?.events, travelBookings, visitedPlaces]);
   const firstName = providerProfile.name.trim().split(/\s+/)[0] || "traveler";
   const travelStampCount = (data?.stamps ?? []).filter((stamp) => stamp.kind === "trip").length;
+  const visiblePurchases = data?.demoMode ? DEMO_PURCHASES : data?.bookings ?? [];
 
   return (
     <div className="account-page">
@@ -254,32 +294,34 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
             )}
             <div className="account-trips-list" aria-label="Your booked trips">
               {travelBookings.map((booking) => <TripRow key={booking.id} booking={booking} />)}
-              {data && travelBookings.length === 0 && <p className="account-empty-inline">Your booked flights and travel packages will show here.</p>}
+              {data && travelBookings.length === 0 && !data.demoMode && <p className="account-empty-inline">Your booked flights and travel packages will show here.</p>}
+              {data?.demoMode && <p className="account-demo-note"><span>i</span> Sample itinerary from your original profile template. No flight was booked and no charge was made.</p>}
             </div>
           </section>
 
           <section className="account-recommendations" aria-labelledby="recommendation-title">
             <div className="account-section-heading">
-              <div><span className="account-section-kicker">02 / A LITTLE FURTHER</span><h2 id="recommendation-title">Made for your next stop<span>.</span></h2><p>Upcoming Starlog events in places from your confirmed trips.</p></div>
-              <span className="account-personal-badge"><AccountIcon name="spark" /> BASED ON YOUR TRIPS</span>
+              <div><span className="account-section-kicker">02 / A LITTLE FURTHER</span><h2 id="recommendation-title">Made for your next stop<span>.</span></h2><p>{data?.demoMode ? "Upcoming Starlog events inspired by your sample travel history." : "Upcoming Starlog events in places from your confirmed trips."}</p></div>
+              <span className="account-personal-badge"><AccountIcon name="spark" /> {data?.demoMode ? "INSPIRED BY SAMPLE HISTORY" : "BASED ON YOUR TRIPS"}</span>
             </div>
             {recommendations.length ? (
               <div className="account-recommendation-grid">
                 {recommendations.map((event) => <RecommendationCard key={event.id} event={event} />)}
               </div>
             ) : (
-              <div className="account-empty-panel account-empty-panel-compact"><h3>Personal picks will appear as your travel history grows.</h3><p>We use destinations from your confirmed bookings and match them with upcoming events.</p></div>
+              <div className="account-empty-panel account-empty-panel-compact"><h3>{data?.demoMode ? "Your next favorite event is waiting to be added." : "Personal picks will appear as your travel history grows."}</h3><p>{data?.demoMode ? "Recommendations will appear here when matching events are available." : "We use destinations from your confirmed bookings and match them with upcoming events."}</p></div>
             )}
           </section>
 
           <section className="account-purchases" id="compras" aria-labelledby="purchases-title">
             <div className="account-section-heading">
               <div><span className="account-section-kicker">03 / YOUR HISTORY</span><h2 id="purchases-title">Your purchases<span>.</span></h2></div>
-              <span className="account-inline-link">{data?.bookings.length ?? 0} BOOKINGS</span>
+              <span className="account-inline-link">{data?.demoMode ? `${DEMO_PURCHASES.length.toString().padStart(2, "0")} SAMPLE PURCHASES` : `${data?.bookings.length ?? 0} BOOKINGS`}</span>
             </div>
             <div className="account-purchase-list">
-              {(data?.bookings ?? []).map((booking) => <PurchaseRow key={booking.id} booking={booking} onOpen={() => setSelectedPurchase(booking)} />)}
-              {data && data.bookings.length === 0 && <p className="account-empty-inline">Your completed ticket, flight and travel package purchases will appear here.</p>}
+              {visiblePurchases.map((booking) => <PurchaseRow key={booking.id} booking={booking} onOpen={() => setSelectedPurchase(booking)} />)}
+              {data && visiblePurchases.length === 0 && <p className="account-empty-inline">Your completed ticket, flight and travel package purchases will appear here.</p>}
+              {data?.demoMode && <p className="account-demo-note"><span>i</span> Sample purchase history from your original profile template. No charges were made and no tickets were issued.</p>}
             </div>
           </section>
 
@@ -291,12 +333,12 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
             <div className="account-profile-card">
               <div className="profile-identity">
                 <AccountAvatar profile={providerProfile} large />
-                <div><span>STELLAR WALLET CONNECTED</span><h3>{providerProfile.name}</h3><p>{providerProfile.email || "Pollar account"} <i /> {visitedPlaces.length} places in your trip history</p></div>
+              <div><span>STELLAR WALLET CONNECTED</span><h3>{providerProfile.name}</h3><p>{providerProfile.email || "Pollar account"} <i /> {data?.demoMode ? `${DEMO_DESTINATIONS.length} sample destinations` : `${visitedPlaces.length} places in your trip history`}</p></div>
                 {data?.membership && <span className="profile-tier">ESTELA PASS<br /><strong>{data.membership.level.toUpperCase()}</strong></span>}
               </div>
               <div className="profile-passport">
                 <div className="profile-passport-heading"><div><span>YOUR ON-CHAIN TRAVEL PASSPORT</span><p>NFT stamps issued from completed trips and event check-ins</p></div><strong>{data?.stamps.length.toString().padStart(2, "0") ?? "00"} STAMPS</strong></div>
-                <StampGallery stamps={data?.stamps ?? []} metadata={data?.stampMetadata ?? {}} />
+                {data?.demoMode && data.stamps.length === 0 ? <DemoDestinationGallery /> : <StampGallery stamps={data?.stamps ?? []} metadata={data?.stampMetadata ?? {}} />}
                 {data?.membership && <div className="profile-membership">
                   {data.membership.passId !== null && <img src={`/api/meta/pass/${data.membership.passId}/image?xp=${data.membership.xp}`} alt={`Estela Pass, ${data.membership.level} level`} width={400} height={250} />}
                   <div><span>ESTELA PASS · {data.membership.level.toUpperCase()}</span><strong>{data.membership.xp.toLocaleString("en-US")} XP</strong><small>{data.membership.discountBps / 100}% member discount · based on your on-chain activity</small></div>
@@ -327,13 +369,13 @@ function TripFeature({ booking }: { booking: Booking }) {
     <>
       <article className="account-feature-trip">
         <div className="account-feature-copy">
-          <div className="account-trip-topline"><span className="account-status"><i /> CONFIRMED BOOKING</span><span>STL · #{booking.id}</span></div>
+          <div className="account-trip-topline"><span className={`account-status ${booking.isDemo ? "account-status-sample" : ""}`}><i /> {booking.isDemo ? "SAMPLE PLAN · DEMO" : "CONFIRMED BOOKING"}</span><span>STL · #{booking.id}</span></div>
           <div className="account-trip-city"><span>{booking.kind === "ticket" ? "UP NEXT" : "NEXT STOP"}</span><h3>{destination}</h3><span className="account-country">{booking.eventCountry?.toUpperCase() || booking.destination?.toUpperCase() || "TRAVEL BOOKING"}</span></div>
           <div className="account-trip-details">
-            <div><AccountIcon name="calendar" /><span><small>DEPARTURE</small><strong>{formatDate(booking.departureAt)}</strong></span></div>
-            <div><AccountIcon name="ticket" /><span><small>BOOKING</small><strong>{booking.eventTitle || (booking.kind === "travel" ? "Duffel flight" : "Flight + event package")}</strong></span></div>
+            <div><AccountIcon name="calendar" /><span><small>{booking.isDemo ? "TRAVEL DATES" : "DEPARTURE"}</small><strong>{booking.isDemo && booking.returnAt ? `${formatDate(booking.departureAt)} — ${formatDate(booking.returnAt)}` : formatDate(booking.departureAt)}</strong></span></div>
+            <div><AccountIcon name="ticket" /><span><small>{booking.isDemo ? "FEATURED EVENT" : "BOOKING"}</small><strong>{booking.eventTitle || (booking.kind === "travel" ? "Duffel flight" : "Flight + event package")}</strong></span></div>
           </div>
-          <div className="account-trip-actions"><Link className="account-button account-button-copper" href="#compras">VIEW BOOKING <AccountIcon name="arrow" /></Link><span className="account-trip-ref">{booking.airlineBookingReference ? `AIRLINE REF · ${booking.airlineBookingReference}` : `BOOKING #${booking.id}`}</span></div>
+          <div className="account-trip-actions">{booking.isDemo ? <span className="account-trip-demo-label">SAMPLE ITINERARY · NOT BOOKED</span> : <Link className="account-button account-button-copper" href="#compras">VIEW BOOKING <AccountIcon name="arrow" /></Link>}<span className="account-trip-ref">{booking.isDemo ? `SAMPLE #${booking.sampleOrderRef ?? booking.id}` : booking.airlineBookingReference ? `AIRLINE REF · ${booking.airlineBookingReference}` : `BOOKING #${booking.id}`}</span></div>
         </div>
         <div className="account-trip-art" aria-label={`Travel route from ${origin} to ${destination}`}>
           <div className="account-art-grid" /><div className="account-art-orbit account-art-orbit-one" /><div className="account-art-orbit account-art-orbit-two" />
@@ -343,7 +385,7 @@ function TripFeature({ booking }: { booking: Booking }) {
           <span className="account-art-code">STARLOG—#{booking.id}</span>
         </div>
       </article>
-      <div className="account-trip-footnote"><span><AccountIcon name="check" /> VERIFIED FROM YOUR BOOKING</span><span>{booking.returnAt ? `Return · ${formatDate(booking.returnAt)}` : booking.currency ? `${booking.amount} ${booking.currency}` : "Confirmed booking"}</span></div>
+      <div className="account-trip-footnote"><span>{booking.isDemo ? <><AccountIcon name="spark" /> SAMPLE ITINERARY</> : <><AccountIcon name="check" /> VERIFIED FROM YOUR BOOKING</>}</span><span>{booking.isDemo ? `Sample amount: ${booking.amount} ${booking.currency} · No booking or charge was made` : booking.returnAt ? `Return · ${formatDate(booking.returnAt)}` : booking.currency ? `${booking.amount} ${booking.currency}` : "Confirmed booking"}</span></div>
     </>
   );
 }
@@ -367,13 +409,13 @@ function PurchaseRow({ booking, onOpen }: { booking: Booking; onOpen: () => void
   const day = date.toLocaleDateString("en-US", { day: "2-digit" });
   const monthYear = date.toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase();
   const title = booking.eventTitle || (booking.kind === "travel" ? "Duffel flight booking" : booking.kind === "package" ? "Flight + event package" : "Starlog ticket");
-  const status = booking.status === "confirmed" ? "COMPLETE" : booking.status.replaceAll("_", " ").toUpperCase();
+  const status = booking.isDemo ? "SAMPLE" : booking.status === "confirmed" ? "COMPLETE" : booking.status.replaceAll("_", " ").toUpperCase();
   return (
     <article className="account-purchase-row">
       <div className="purchase-date"><strong>{day}</strong><span>{monthYear}</span></div>
-      <div className="purchase-main"><span>{(booking.destination || booking.eventCity || booking.kind).toUpperCase()} · {booking.kind.toUpperCase()}</span><h3>{title}</h3><small>Booking #{booking.id}{booking.airlineBookingReference ? ` · Airline ref ${booking.airlineBookingReference}` : ""}</small></div>
-      <div className="purchase-method"><span>AMOUNT</span><strong>{booking.amount} {booking.currency}</strong><small>{booking.hasDuffelOrder ? "Duffel order confirmed" : "Starlog booking"}</small></div>
-      <span className={`purchase-complete ${booking.status === "confirmed" ? "" : "purchase-status-other"}`}><AccountIcon name="check" /> {status}</span>
+      <div className="purchase-main"><span>{(booking.destination || booking.eventCity || booking.kind).toUpperCase()} · {booking.kind.toUpperCase()}</span><h3>{title}</h3><small>{booking.isDemo ? `Order ${booking.sampleOrderRef ?? `ST-${booking.id}`}` : `Booking #${booking.id}${booking.airlineBookingReference ? ` · Airline ref ${booking.airlineBookingReference}` : ""}`}</small></div>
+      <div className="purchase-method"><span>AMOUNT</span><strong>{booking.amount} {booking.currency}</strong><small>{booking.isDemo ? booking.samplePaymentNote || "Sample data · no charge made" : booking.hasDuffelOrder ? "Duffel order confirmed" : "Starlog booking"}</small></div>
+      <span className={`purchase-complete ${booking.isDemo || booking.status !== "confirmed" ? "purchase-status-other" : ""}`}>{booking.isDemo ? <AccountIcon name="spark" /> : <AccountIcon name="check" />} {status}</span>
       <button type="button" className="purchase-menu" onClick={onOpen} aria-label={`View ${title} details`}>↗</button>
     </article>
   );
@@ -381,7 +423,7 @@ function PurchaseRow({ booking, onOpen }: { booking: Booking; onOpen: () => void
 
 function PurchaseDialog({ booking, onClose }: { booking: Booking; onClose: () => void }) {
   const title = booking.eventTitle || (booking.kind === "travel" ? "Duffel flight booking" : "Starlog package");
-  return <div className="account-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="account-purchase-dialog" role="dialog" aria-modal="true" aria-labelledby="purchase-dialog-title"><button type="button" className="account-dialog-close" onClick={onClose} aria-label="Close purchase details">×</button><span className="account-section-kicker">BOOKING DETAILS</span><h2 id="purchase-dialog-title">{title}</h2><div><span>BOOKING</span><strong>#{booking.id}</strong></div><div><span>DATE</span><strong>{formatDate(booking.createdAt)}</strong></div><div><span>DESTINATION</span><strong>{booking.destination || booking.eventCity || "Not available"}</strong></div><div><span>STATUS</span><strong>{booking.status.replaceAll("_", " ").toUpperCase()}</strong></div><div><span>AMOUNT</span><strong>{booking.amount} {booking.currency}</strong></div>{booking.airlineBookingReference && <div><span>AIRLINE REFERENCE</span><strong>{booking.airlineBookingReference}</strong></div>}<button type="button" className="account-button account-button-copper" onClick={onClose}>CLOSE</button></section></div>;
+  return <div className="account-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="account-purchase-dialog" role="dialog" aria-modal="true" aria-labelledby="purchase-dialog-title"><button type="button" className="account-dialog-close" onClick={onClose} aria-label="Close purchase details">×</button><span className="account-section-kicker">{booking.isDemo ? "SAMPLE PURCHASE · DEMO" : "BOOKING DETAILS"}</span><h2 id="purchase-dialog-title">{title}</h2><div><span>{booking.isDemo ? "ORDER" : "BOOKING"}</span><strong>{booking.isDemo ? booking.sampleOrderRef ?? `ST-${booking.id}` : `#${booking.id}`}</strong></div><div><span>DATE</span><strong>{formatDate(booking.createdAt)}</strong></div><div><span>DESTINATION</span><strong>{booking.destination || booking.eventCity || "Not available"}</strong></div><div><span>STATUS</span><strong>{booking.isDemo ? "SAMPLE ONLY" : booking.status.replaceAll("_", " ").toUpperCase()}</strong></div><div><span>AMOUNT</span><strong>{booking.amount} {booking.currency}</strong></div>{booking.samplePaymentNote && <div><span>DETAILS</span><strong>{booking.samplePaymentNote}</strong></div>}{booking.airlineBookingReference && <div><span>AIRLINE REFERENCE</span><strong>{booking.airlineBookingReference}</strong></div>}{booking.isDemo && <p className="account-demo-note"><span>i</span> This is sample profile data. No charge was made and no ticket was issued.</p>}<button type="button" className="account-button account-button-copper" onClick={onClose}>CLOSE</button></section></div>;
 }
 
 function StampGallery({ stamps, metadata }: { stamps: Stamp[]; metadata: Record<number, StampMetadata> }) {
@@ -415,6 +457,24 @@ function StampGallery({ stamps, metadata }: { stamps: Stamp[]; metadata: Record<
         </div>
       </div>
     </>
+  );
+}
+
+function DemoDestinationGallery() {
+  return (
+    <div className="profile-passport-option-two">
+      <div className="passport-option-heading"><div><span>SAMPLE DESTINATIONS · DEMO</span><h4>Places I&apos;ve been</h4><p>Photo memories carried over from the original profile template.</p></div><strong>03 PLACES</strong></div>
+      <div className="destination-memory-rail" aria-label="Sample destination memories, not NFT stamps">
+        {DEMO_DESTINATIONS.map((destination) => {
+          const photo = destinationPhoto(destination.place);
+          return <article className={`destination-memory ${destination.style}`} key={destination.place}>
+            <div className="destination-memory-stamp">{photo && <img src={photo} alt={`${destination.place}, ${destination.country}`} loading="lazy" decoding="async" />}<span className="destination-memory-code">{destination.code} · {destination.year} · DEMO</span><span className="destination-memory-star" aria-hidden="true">✧</span></div>
+            <div className="destination-memory-caption"><strong>{destination.place}</strong><span>{destination.country}</span><small>{destination.year} · SAMPLE</small></div>
+          </article>;
+        })}
+      </div>
+      <p className="account-demo-note"><span>i</span> Sample destinations only. These are not NFT stamps and are not linked to live bookings.</p>
+    </div>
   );
 }
 
