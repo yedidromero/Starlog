@@ -1,0 +1,515 @@
+.account-page {
+  --petroleum: #12384A;
+  --deep-petroleum: #0B2633;
+  --mist-blue: #4A7C8C;
+  --fog: #DCE8EC;
+  --linen: #F2ECE3;
+  --copper: #B87351;
+  --light-copper: #D9A07E;
+  --dark-copper: #9A5A3C;
+  --tile-red: #A63D32;
+  --page-width: 1440px;
+  font-family: Inter, Arial, sans-serif;
+  color-scheme: dark;
+}
+.account-page *, .account-page *::before, .account-page *::after { box-sizing: border-box; }/* Logged-in Starlog account */
+.account-shortcut { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 3px 8px 3px 3px; border: 1px solid rgba(217,160,126,.6); color: var(--linen); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .75px; white-space: nowrap; }
+.account-shortcut > span { width: 28px; height: 28px; display: grid; place-items: center; background: var(--copper); color: var(--deep-petroleum); font-size: 8px; }
+.account-shortcut:hover { border-color: var(--light-copper); background: rgba(217,160,126,.08); }
+.account-icon { width: 17px; height: 17px; flex: 0 0 auto; }
+.account-page { min-height: 100vh; overflow: clip; background-color: var(--deep-petroleum); background-image: radial-gradient(rgba(74,124,140,.16) .65px, transparent .75px); background-size: 24px 24px; color: var(--linen); }
+.account-header { position: sticky; z-index: 25; top: 0; height: 78px; display: flex; align-items: center; gap: 26px; padding-inline: max(32px, calc((100vw - 1440px)/2)); border-bottom: 1px solid rgba(74,124,140,.72); background: var(--deep-petroleum); }
+.account-brand, .account-footer-brand { display: inline-flex; align-items: center; gap: 10px; flex: 0 0 auto; color: var(--linen); }
+.account-brand .brand-mark, .account-footer-brand .brand-mark { width: 34px; height: 36px; }
+.account-brand .brand-name, .account-footer-brand .brand-name { font-size: 32px; }
+.account-back-link { margin-left: auto; color: var(--light-copper); font: 600 9px "IBM Plex Mono", monospace; letter-spacing: 1.1px; }
+.account-back-link span { margin-left: 6px; }
+.account-header-user { display: inline-flex; align-items: center; gap: 9px; padding-left: 18px; border-left: 1px solid var(--mist-blue); color: var(--linen); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .7px; }
+.account-avatar { display: grid; place-items: center; border: 1px solid var(--light-copper); background: var(--copper); color: var(--deep-petroleum); font: 600 11px "IBM Plex Mono", monospace; }
+.account-avatar-small { width: 34px; height: 34px; }
+.account-frame { width: min(1440px, calc(100% - 76px)); display: grid; grid-template-columns: 192px minmax(0, 1fr); gap: clamp(38px, 5.1vw, 76px); margin: 0 auto; padding: 60px 0 0; }
+.account-sidebar { position: sticky; top: 108px; align-self: start; min-height: 470px; display: flex; flex-direction: column; }
+.account-sidebar-label { display: flex; justify-content: space-between; padding: 0 0 15px; border-bottom: 1px solid rgba(74,124,140,.6); color: var(--light-copper); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: 1px; }
+.account-sidebar-label span { color: var(--mist-blue); }
+.account-side-nav { display: grid; padding-top: 12px; }
+.account-side-nav a { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 10px; min-height: 49px; padding: 0 8px; border-left: 2px solid transparent; color: var(--mist-blue); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .7px; transition: background .15s, color .15s; }
+.account-side-nav a .account-icon { width: 15px; height: 15px; }
+.account-side-nav a small { color: var(--mist-blue); font-size: 7px; }
+.account-side-nav a:hover, .account-side-nav a.active { border-left-color: var(--copper); background: rgba(242,236,227,.045); color: var(--linen); }
+.account-side-nav a.active small { color: var(--light-copper); }
+.account-sidebar-bottom { display: grid; justify-items: start; gap: 11px; margin-top: auto; padding-top: 26px; color: var(--mist-blue); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .8px; }
+.account-sidebar-star { color: var(--copper); font-size: 25px; line-height: 1; }
+.account-sidebar-bottom a { color: var(--light-copper); text-decoration: underline; text-underline-offset: 4px; }
+.account-main { min-width: 0; }
+.account-welcome { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 5px 0 43px; }
+.account-kicker, .account-section-kicker { display: flex; align-items: center; gap: 9px; color: var(--light-copper); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: 1.25px; }
+.account-live-dot { width: 7px; height: 7px; background: #75A993; box-shadow: 0 0 0 3px rgba(117,169,147,.15); }
+.account-kicker-line { width: 28px; height: 1px; margin-left: 2px; background: var(--mist-blue); }
+.account-welcome h1 { margin: 18px 0 10px; color: var(--linen); font: 400 clamp(49px, 5.6vw, 77px)/.93 "DM Serif Display", Georgia, serif; letter-spacing: -.045em; }
+.account-welcome h1 em { color: var(--light-copper); font-weight: 400; }
+.account-welcome p { margin: 0; color: #A6BCC2; font-size: 12px; line-height: 1.65; }
+.account-welcome-stamp { width: 104px; height: 114px; flex: 0 0 auto; display: grid; align-content: center; justify-items: center; gap: 2px; margin-bottom: 7px; border: 1px solid rgba(217,160,126,.65); color: var(--light-copper); transform: rotate(4deg); }
+.account-welcome-stamp span, .account-welcome-stamp small { font: 600 7px/1.5 "IBM Plex Mono", monospace; letter-spacing: .9px; text-align: center; }
+.account-welcome-stamp strong { color: var(--linen); font: 40px/.9 "DM Serif Display", Georgia, serif; }
+.account-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.account-section-heading h2 { margin: 8px 0 0; color: var(--linen); font: 400 clamp(30px, 3vw, 43px)/1.02 "DM Serif Display", Georgia, serif; letter-spacing: -.035em; }
+.account-section-heading h2 > span { color: var(--copper); }
+.account-section-heading p { margin: 8px 0 0; color: #A6BCC2; font-size: 11px; line-height: 1.5; }
+.account-inline-link { display: inline-flex; align-items: center; gap: 9px; padding: 8px 0; border: 0; background: transparent; color: var(--light-copper); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .75px; white-space: nowrap; }
+.account-inline-link:hover { color: var(--linen); }
+.account-inline-link .account-icon { width: 15px; height: 15px; }
+.account-feature-trip { display: grid; grid-template-columns: 1.13fr .87fr; min-height: 330px; border: 1px solid var(--light-copper); background: var(--linen); color: var(--petroleum); box-shadow: 7px 7px 0 var(--dark-copper); }
+.account-feature-copy { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: 20px clamp(20px, 3.1vw, 42px) 22px; }
+.account-trip-topline { display: flex; justify-content: space-between; gap: 12px; color: var(--dark-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .8px; }
+.account-status { display: inline-flex; align-items: center; gap: 7px; }
+.account-status i { width: 6px; height: 6px; background: #4E8E70; }
+.account-trip-city { padding: 22px 0 18px; }
+.account-trip-city > span:first-child, .account-country { color: var(--dark-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: 1.2px; }
+.account-trip-city h3 { margin: 7px 0 5px; color: var(--petroleum); font: 400 clamp(57px, 7vw, 88px)/.86 "DM Serif Display", Georgia, serif; letter-spacing: -.055em; }
+.account-trip-details { display: grid; grid-template-columns: 1fr 1.3fr; gap: 14px; padding: 15px 0; border-top: 1px solid #CBD7D5; border-bottom: 1px solid #CBD7D5; }
+.account-trip-details > div { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.account-trip-details .account-icon { width: 15px; height: 15px; color: var(--dark-copper); }
+.account-trip-details span { display: grid; gap: 5px; min-width: 0; }
+.account-trip-details small { color: var(--dark-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .65px; }
+.account-trip-details strong { color: var(--petroleum); font-size: 10px; font-weight: 600; line-height: 1.4; }
+.account-trip-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 18px; }
+.account-button { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 13px; border: 1px solid var(--petroleum); font: 600 8px "IBM Plex Mono", monospace; letter-spacing: .55px; }
+.account-button .account-icon { width: 14px; height: 14px; }
+.account-button-copper { background: var(--copper); color: var(--deep-petroleum); box-shadow: 4px 4px 0 var(--deep-petroleum); }
+.account-button-copper:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--deep-petroleum); }
+.account-button-outline { background: transparent; color: var(--petroleum); }
+.account-trip-ref { color: var(--dark-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .45px; }
+.account-trip-art { position: relative; min-height: 330px; overflow: hidden; background: #D4E0DF; color: var(--petroleum); }
+.account-art-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(18,56,74,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(18,56,74,.08) 1px, transparent 1px); background-size: 28px 28px; }
+.account-art-orbit { position: absolute; width: 310px; height: 310px; border: 1px solid rgba(18,56,74,.22); border-radius: 50%; }
+.account-art-orbit-one { top: -63px; left: 16%; }
+.account-art-orbit-two { top: -28px; left: 26%; width: 220px; height: 220px; border-style: dashed; }
+.account-art-coordinate { position: absolute; top: 22px; left: 22px; color: var(--dark-copper); font: 600 7px/1.7 "IBM Plex Mono", monospace; letter-spacing: .75px; }
+.account-art-star { position: absolute; top: 50px; right: 20%; color: var(--copper); font-size: 35px; }
+.account-art-route { position: absolute; top: 45%; right: 9%; left: 8%; display: flex; align-items: center; gap: 10px; color: var(--dark-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .55px; }
+.account-art-route i { height: 1px; flex: 1; border-top: 1px dashed var(--mist-blue); }
+.account-art-route b { width: 10px; height: 10px; border: 2px solid var(--linen); border-radius: 50%; background: var(--copper); box-shadow: 0 0 0 1px var(--copper); }
+.account-art-stamp { position: absolute; right: 15%; bottom: 14%; width: 126px; height: 135px; display: grid; align-content: center; justify-items: center; gap: 2px; border: 2px solid rgba(154,90,60,.7); color: var(--dark-copper); transform: rotate(-7deg); }
+.account-art-stamp span, .account-art-stamp small { font: 600 7px/1.45 "IBM Plex Mono", monospace; letter-spacing: .65px; text-align: center; }
+.account-art-stamp strong { color: var(--petroleum); font: 62px/.95 "DM Serif Display", Georgia, serif; }
+.account-art-code { position: absolute; bottom: 17px; left: 20px; color: var(--mist-blue); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .7px; }
+.account-trip-footnote { display: flex; justify-content: space-between; gap: 12px; margin-top: 15px; color: var(--mist-blue); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .45px; }
+.account-trip-footnote > span:first-child { display: inline-flex; align-items: center; gap: 6px; color: #90B9A5; }
+.account-trip-footnote .account-icon { width: 13px; height: 13px; }
+.account-recommendations, .account-purchases, .account-profile { padding-top: 66px; scroll-margin-top: 98px; }
+.account-recommendation-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 13px; }
+.account-recommendation-card { min-width: 0; border: 1px solid var(--mist-blue); background: var(--linen); color: var(--petroleum); }
+.recommendation-art { position: relative; height: 147px; overflow: hidden; padding: 13px; }
+.recommendation-art > span { position: relative; z-index: 1; display: inline-block; padding: 5px 6px; border: 1px solid currentColor; font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .8px; }
+.recommendation-art strong { position: absolute; right: 14px; bottom: 7px; color: rgba(242,236,227,.9); font: 400 42px/.76 "DM Serif Display", Georgia, serif; letter-spacing: -.04em; text-align: right; }
+.recommendation-art i { position: absolute; right: 18px; top: 42px; color: var(--light-copper); font-size: 38px; font-style: normal; }
+.recommendation-art-barcelona { background: linear-gradient(132deg, rgba(18,56,74,.1), transparent 42%), repeating-linear-gradient(124deg, #456E7A 0 18px, #547D87 18px 36px, #355B69 36px 54px); color: var(--linen); }
+.recommendation-art-valencia { background: radial-gradient(ellipse at 35% 85%, #8D9E75 0 17%, transparent 18%), linear-gradient(155deg, #C8D5C5 0 41%, #6B918A 41% 56%, #366B71 56% 72%, #24525F 72%); color: var(--petroleum); }
+.recommendation-art-valencia strong { color: var(--linen); }
+.recommendation-art-community { background-color: #B87351; background-image: radial-gradient(rgba(242,236,227,.17) .8px, transparent .9px); background-size: 14px 14px; color: var(--deep-petroleum); }
+.recommendation-art-community strong { right: 14px; bottom: 14px; font: 600 25px/.9 "IBM Plex Mono", monospace; letter-spacing: -.08em; }
+.recommendation-art-community i { color: var(--linen); }
+.recommendation-content { padding: 14px 15px 12px; }
+.recommendation-reason { color: var(--dark-copper); font: 600 6.5px "IBM Plex Mono", monospace; letter-spacing: .6px; }
+.recommendation-content h3 { margin: 8px 0 6px; color: var(--petroleum); font: 400 25px/.98 "DM Serif Display", Georgia, serif; }
+.recommendation-content p { min-height: 43px; margin: 0; color: var(--dark-copper); font-size: 9px; line-height: 1.5; }
+.recommendation-content > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; padding-top: 9px; border-top: 1px solid #C7D3D2; }
+.recommendation-content > div > span { color: var(--dark-copper); font: 600 6.5px "IBM Plex Mono", monospace; letter-spacing: .35px; }
+.recommendation-content a { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid var(--petroleum); color: var(--petroleum); font-size: 15px; }
+.recommendation-content a:hover { background: var(--petroleum); color: var(--linen); }
+.account-personal-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px; border: 1px solid rgba(217,160,126,.62); color: var(--light-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .7px; white-space: nowrap; }
+.account-personal-badge .account-icon { width: 15px; height: 15px; }
+.account-demo-note { display: flex; align-items: flex-start; gap: 8px; margin: 13px 0 0; color: var(--mist-blue); font: 8px/1.6 "IBM Plex Mono", monospace; }
+.account-demo-note > span { width: 13px; height: 13px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--mist-blue); font-size: 8px; }
+.account-purchase-list { border-top: 1px solid var(--mist-blue); }
+.account-purchase-row { display: grid; grid-template-columns: 56px minmax(0,1fr) 110px 112px 26px; align-items: center; gap: 16px; min-height: 91px; padding: 13px 6px; border-bottom: 1px solid rgba(74,124,140,.62); }
+.purchase-date { display: flex; align-items: center; gap: 6px; color: var(--light-copper); }
+.purchase-date strong { font: 400 38px/.9 "DM Serif Display", Georgia, serif; }
+.purchase-date span { font: 600 6px/1.5 "IBM Plex Mono", monospace; letter-spacing: .45px; }
+.purchase-main { min-width: 0; }
+.purchase-main > span, .purchase-method > span { color: var(--mist-blue); font: 600 6.5px "IBM Plex Mono", monospace; letter-spacing: .8px; }
+.purchase-main h3 { overflow: hidden; margin: 4px 0 3px; color: var(--linen); font: 400 20px/1.05 "DM Serif Display", Georgia, serif; text-overflow: ellipsis; white-space: nowrap; }
+.purchase-main small, .purchase-method small { color: #9CB2B8; font-size: 8px; }
+.purchase-method { display: grid; justify-items: start; gap: 3px; }
+.purchase-method strong { color: var(--linen); font: 600 10px "IBM Plex Mono", monospace; }
+.purchase-complete { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 5px; border: 1px solid rgba(117,169,147,.5); color: #9BC7B2; font: 600 6px "IBM Plex Mono", monospace; letter-spacing: .25px; white-space: nowrap; }
+.purchase-complete .account-icon { width: 12px; height: 12px; }
+.purchase-menu { width: 26px; height: 30px; border: 0; background: transparent; color: var(--mist-blue); font: 19px "IBM Plex Mono", monospace; letter-spacing: 1px; }
+.purchase-menu:hover { color: var(--light-copper); }
+.account-profile-card { padding: 22px; border: 1px solid var(--mist-blue); background: rgba(18,56,74,.43); }
+.profile-identity { display: flex; align-items: center; gap: 14px; padding-bottom: 20px; border-bottom: 1px solid rgba(74,124,140,.7); }
+.account-avatar-large { width: 60px; height: 60px; flex: 0 0 auto; font-size: 17px; }
+.profile-identity > div:nth-child(2) > span { color: var(--light-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .85px; }
+.profile-identity h3 { margin: 4px 0; color: var(--linen); font: 400 28px/1 "DM Serif Display", Georgia, serif; }
+.profile-identity p { display: flex; align-items: center; gap: 6px; margin: 0; color: #A6BCC2; font-size: 9px; }
+.profile-identity p i { width: 4px; height: 4px; background: var(--copper); }
+.profile-tier { display: grid; gap: 4px; margin-left: auto; padding: 9px 11px; border: 1px solid rgba(217,160,126,.55); color: var(--light-copper); font: 600 6px/1.45 "IBM Plex Mono", monospace; letter-spacing: .65px; text-align: center; }
+.profile-tier strong { color: var(--linen); font-size: 8px; }
+.profile-passport { margin-top: 19px; padding-top: 17px; border-top: 1px solid rgba(74,124,140,.7); }
+.profile-passport-heading { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
+.profile-passport-heading > div > span { color: var(--light-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .9px; }
+.profile-passport-heading p { margin: 5px 0 0; color: #A6BCC2; font-size: 9px; }
+.profile-passport-heading > strong { color: var(--mist-blue); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .65px; }
+.profile-passport-stamps { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 13px; }
+.passport-stamp { position: relative; min-height: 132px; display: grid; align-content: center; justify-items: center; overflow: hidden; padding: 12px 7px 10px; border: 1px dashed rgba(242,236,227,.92); background: var(--petroleum); color: var(--linen); text-align: center; isolation: isolate; }
+.passport-stamp-photo { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.78) sepia(.08); }
+.passport-stamp-shade { position: absolute; z-index: -1; inset: 0; background: linear-gradient(180deg, rgba(11,38,51,.42), rgba(11,38,51,.68)); }
+.passport-stamp::before, .passport-stamp::after { position: absolute; z-index: 0; top: 50%; left: 50%; width: 100px; height: 100px; border: 1px solid rgba(242,236,227,.8); border-radius: 50%; content: ""; opacity: .5; transform: translate(-50%,-50%); pointer-events: none; }
+.passport-stamp::after { width: 87px; height: 87px; border-style: dashed; opacity: .55; }
+.passport-stamp-venice { background-color: #6D5145; }
+.passport-stamp-egypt { background-color: #77623F; }
+.passport-stamp-israel { background-color: #3D6272; }
+.passport-stamp-meta, .passport-stamp small, .passport-stamp i { position: relative; z-index: 1; color: var(--linen); font: 600 6px "IBM Plex Mono", monospace; letter-spacing: .7px; text-shadow: 0 1px 5px rgba(0,0,0,.65); }
+.passport-stamp-symbol { position: relative; z-index: 1; margin: 5px 0 0; color: var(--light-copper); font-size: 16px; line-height: 1; text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+.passport-stamp strong { position: relative; z-index: 1; margin: 2px 0; color: var(--linen); font: 400 23px/.95 "DM Serif Display", Georgia, serif; letter-spacing: -.025em; text-shadow: 0 1px 7px rgba(0,0,0,.75); }
+.passport-stamp small { font-size: 5.5px; }
+.passport-stamp i { margin-top: 6px; font-size: 5px; font-style: normal; }
+.profile-passport-note { margin: 9px 0 0; color: var(--mist-blue); font: 7px/1.5 "IBM Plex Mono", monospace; }
+.profile-passport-option-two { margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(74,124,140,.55); }
+.passport-option-heading { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
+.passport-option-heading > div > span { color: var(--light-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .9px; }
+.passport-option-heading h4 { margin: 5px 0 3px; color: var(--linen); font: 400 25px/1 "DM Serif Display", Georgia, serif; }
+.passport-option-heading p { margin: 0; color: #A6BCC2; font-size: 9px; }
+.passport-option-heading > strong { padding-bottom: 2px; color: var(--mist-blue); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .65px; white-space: nowrap; }
+.destination-memory-rail { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 14px; }
+.destination-memory { min-width: 0; scroll-snap-align: start; }
+.destination-memory-stamp { position: relative; height: 105px; overflow: hidden; padding: 4px; border: 2px solid var(--memory-stamp-color); background: var(--memory-stamp-color); box-shadow: 0 2px 0 rgba(0,0,0,.14); }
+.destination-memory-stamp::after { position: absolute; z-index: 1; inset: 6px; border: 1px dashed rgba(255,255,255,.8); content: ""; pointer-events: none; }
+.destination-memory-stamp img { width: 100%; height: 100%; display: block; object-fit: cover; filter: saturate(.92); }
+.destination-memory-venice { --memory-stamp-color: #4F91BE; }
+.destination-memory-venice .destination-memory-stamp { border-radius: 42px 42px 15px 15px; }
+.destination-memory-egypt { --memory-stamp-color: #BF7D4C; }
+.destination-memory-egypt .destination-memory-stamp { border-radius: 5px 17px 5px 17px; }
+.destination-memory-israel { --memory-stamp-color: #5A8A69; }
+.destination-memory-israel .destination-memory-stamp { padding-inline: 12px; border: 0; clip-path: polygon(10% 0,90% 0,100% 50%,90% 100%,10% 100%,0 50%); }
+.destination-memory-israel .destination-memory-stamp::after { inset: 5px 16px; }
+.destination-memory-code { position: absolute; z-index: 2; top: 10px; left: 10px; padding: 4px 5px; background: rgba(242,236,227,.94); color: var(--petroleum); font: 600 6px "IBM Plex Mono", monospace; letter-spacing: .55px; }
+.destination-memory-star { position: absolute; z-index: 2; right: 10px; bottom: 9px; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid rgba(242,236,227,.85); background: rgba(11,38,51,.28); color: var(--linen); font-size: 14px; }
+.destination-memory-caption { display: grid; grid-template-columns: 1fr auto; gap: 4px 7px; padding: 7px 2px 0; }
+.destination-memory-caption strong { overflow: hidden; color: var(--linen); font: 400 16px/1.1 "DM Serif Display", Georgia, serif; text-overflow: ellipsis; white-space: nowrap; }
+.destination-memory-caption span { color: var(--light-copper); font-size: 8px; text-align: right; }
+.destination-memory-caption small { grid-column: 1/-1; color: var(--mist-blue); font: 600 6px "IBM Plex Mono", monospace; letter-spacing: .55px; }
+.profile-fields { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 17px 24px; padding-top: 19px; }
+.profile-fields label { display: grid; gap: 8px; }
+.profile-fields label > span { color: var(--mist-blue); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .8px; }
+.profile-fields input { width: 100%; min-height: 32px; padding: 0; border: 0; border-bottom: 1px solid rgba(74,124,140,.54); border-radius: 0; background: transparent; color: var(--linen); font-size: 10px; outline-offset: 3px; }
+.profile-fields input[readonly] { cursor: default; }
+.profile-fields input:not([readonly]) { border-color: var(--light-copper); }
+.profile-fields input:focus-visible { outline-color: var(--light-copper); }
+.profile-edit-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 18px; }
+.profile-edit-actions > span { margin-right: auto; color: var(--mist-blue); font: 7px "IBM Plex Mono", monospace; }
+.profile-edit-actions .account-button { min-height: 36px; font-size: 7px; }
+.profile-saved-notice { display: flex; align-items: center; gap: 7px; margin: 15px 0 0; color: #9BC7B2; font-size: 9px; }
+.profile-saved-notice .account-icon { width: 14px; height: 14px; }
+.account-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 65px; padding: 22px 0; border-top: 1px solid rgba(74,124,140,.6); }
+.account-footer-brand .brand-mark { width: 25px; height: 27px; }
+.account-footer-brand .brand-name { font-size: 25px; }
+.account-footer > p { margin: 0; color: var(--light-copper); font: 21px "DM Serif Display", Georgia, serif; }
+.account-footer > span { display: inline-flex; align-items: center; gap: 7px; color: var(--mist-blue); font: 600 6.5px "IBM Plex Mono", monospace; letter-spacing: .5px; }
+.account-footer > span i { color: var(--copper); font-size: 16px; font-style: normal; }
+.account-modal-backdrop { position: fixed; z-index: 70; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: 20px; background: rgba(5,20,27,.84); }
+.account-purchase-dialog { position: relative; width: min(100%, 480px); padding: 30px; border: 1px solid var(--light-copper); background: var(--linen); color: var(--petroleum); box-shadow: 7px 7px 0 var(--dark-copper); }
+.account-dialog-close { position: absolute; top: 12px; right: 13px; width: 32px; height: 32px; border: 1px solid var(--petroleum); background: transparent; color: var(--petroleum); font: 26px/1 "DM Serif Display", Georgia, serif; }
+.account-purchase-dialog .account-section-kicker { padding-right: 38px; color: var(--dark-copper); }
+.account-purchase-dialog h2 { margin: 18px 0 20px; color: var(--petroleum); font: 38px/.98 "DM Serif Display", Georgia, serif; }
+.account-purchase-dialog > div:not(:first-child) { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px solid #C7D3D2; }
+.account-purchase-dialog > div span { color: var(--dark-copper); font: 600 7px "IBM Plex Mono", monospace; letter-spacing: .7px; }
+.account-purchase-dialog > div strong { color: var(--petroleum); font: 600 9px "IBM Plex Mono", monospace; text-align: right; }
+.account-purchase-dialog p { margin: 15px 0 18px; padding: 10px; border-left: 3px solid var(--copper); background: var(--fog); color: var(--petroleum); font-size: 10px; line-height: 1.6; }
+.account-purchase-dialog > .account-button { width: 100%; }
+
+@media (max-width: 1220px) {
+  .account-header { padding-inline: 26px; }
+  .account-frame { width: calc(100% - 52px); grid-template-columns: 170px minmax(0,1fr); gap: 33px; }
+  .account-shortcut > b { display: none; }
+  .account-shortcut { padding-right: 3px; }
+  .account-feature-trip { grid-template-columns: 1.1fr .9fr; }
+  .account-feature-copy { padding-inline: 22px; }
+  .account-trip-details { grid-template-columns: 1fr; gap: 10px; }
+  .account-purchase-row { grid-template-columns: 48px minmax(0,1fr) 92px 100px 20px; gap: 10px; }
+  .purchase-main h3 { font-size: 18px; }
+}
+@media (max-width: 900px) {
+  .account-frame { width: min(100% - 40px, 760px); display: block; padding-top: 37px; }
+  .account-sidebar { position: static; min-height: 0; margin-bottom: 29px; }
+  .account-sidebar-label { padding-bottom: 10px; }
+  .account-side-nav { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 5px; padding-top: 8px; }
+  .account-side-nav a { min-height: 42px; grid-template-columns: 17px 1fr auto; gap: 6px; padding: 0 7px; font-size: 7px; }
+  .account-side-nav a .account-icon { width: 14px; height: 14px; }
+  .account-sidebar-bottom { display: none; }
+  .account-welcome { padding-bottom: 33px; }
+  .account-feature-trip { grid-template-columns: 1fr .82fr; }
+  .account-trip-details { grid-template-columns: 1fr; }
+  .account-recommendation-grid { gap: 10px; }
+  .recommendation-content { padding-inline: 11px; }
+  .recommendation-art { height: 125px; }
+  .recommendation-art strong { font-size: 35px; }
+  .recommendation-content h3 { font-size: 22px; }
+  .account-purchase-row { grid-template-columns: 48px minmax(0,1fr) 90px 100px 20px; gap: 9px; }
+}
+
+@media (max-width: 640px) {
+  .account-header { height: 66px; gap: 12px; padding-inline: 16px; }
+  .account-brand { gap: 7px; }
+  .account-brand .brand-mark { width: 29px; height: 31px; }
+  .account-brand .brand-name { font-size: 28px; }
+  .account-back-link { font-size: 7px; letter-spacing: .55px; }
+  .account-header-user { gap: 0; padding-left: 10px; }
+  .account-header-user > span:last-child { display: none; }
+  .account-avatar-small { width: 32px; height: 32px; font-size: 9px; }
+  .account-frame { width: calc(100% - 32px); padding-top: 28px; }
+  .account-sidebar { margin-bottom: 25px; }
+  .account-sidebar-label { font-size: 7px; }
+  .account-side-nav { gap: 3px; }
+  .account-side-nav a { min-height: 43px; grid-template-columns: 1fr; justify-items: center; gap: 4px; padding: 5px 1px; border-left: 0; border-bottom: 2px solid transparent; font-size: 6px; letter-spacing: .25px; }
+  .account-side-nav a.active { border-bottom-color: var(--copper); border-left-color: transparent; }
+  .account-side-nav a small { display: none; }
+  .account-welcome { align-items: center; padding: 4px 0 30px; }
+  .account-kicker { gap: 6px; font-size: 6px; letter-spacing: .65px; }
+  .account-kicker-line { width: 13px; }
+  .account-welcome h1 { margin: 17px 0 8px; font-size: clamp(47px, 12.5vw, 65px); }
+  .account-welcome p { max-width: 285px; font-size: 10px; }
+  .account-welcome-stamp { width: 72px; height: 82px; margin-bottom: 0; }
+  .account-welcome-stamp span, .account-welcome-stamp small { font-size: 5px; }
+  .account-welcome-stamp strong { font-size: 30px; }
+  .account-section-heading { align-items: flex-start; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .account-section-heading h2 { font-size: clamp(29px, 8vw, 39px); }
+  .account-section-kicker { font-size: 7px; }
+  .account-inline-link { padding: 2px 0; font-size: 7px; }
+  .account-feature-trip { grid-template-columns: 1fr; }
+  .account-feature-copy { min-height: 305px; padding: 17px; }
+  .account-trip-topline { font-size: 6px; }
+  .account-trip-city { padding: 18px 0 15px; }
+  .account-trip-city h3 { font-size: 70px; }
+  .account-trip-details { grid-template-columns: 1fr 1.3fr; gap: 10px; }
+  .account-trip-details strong { font-size: 9px; }
+  .account-trip-actions { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .account-trip-art { min-height: 240px; }
+  .account-art-stamp { right: 17%; bottom: 13%; width: 108px; height: 116px; }
+  .account-art-stamp strong { font-size: 51px; }
+  .account-trip-footnote { flex-direction: column; font-size: 6.5px; }
+  .account-recommendations, .account-purchases, .account-profile { padding-top: 48px; scroll-margin-top: 80px; }
+  .account-section-heading p { font-size: 10px; }
+  .account-personal-badge { align-self: flex-start; }
+  .account-recommendation-grid { grid-template-columns: 1fr; gap: 12px; }
+  .account-recommendation-card { display: grid; grid-template-columns: .85fr 1fr; min-height: 180px; }
+  .recommendation-art { height: 100%; min-height: 180px; }
+  .recommendation-art strong { right: 10px; bottom: 12px; font-size: 33px; }
+  .recommendation-art-community strong { font-size: 21px; }
+  .recommendation-content { display: flex; flex-direction: column; justify-content: center; padding: 12px; }
+  .recommendation-reason { font-size: 5.5px; }
+  .recommendation-content h3 { font-size: 21px; }
+  .recommendation-content p { min-height: 0; font-size: 8px; }
+  .recommendation-content > div { margin-top: auto; padding-top: 9px; }
+  .recommendation-content > div > span { font-size: 5.5px; }
+  .account-purchase-row { grid-template-columns: 39px minmax(0,1fr) auto 20px; grid-template-areas: "date main main menu" "date method complete menu"; gap: 6px 9px; min-height: 82px; padding: 11px 2px; }
+  .purchase-date { grid-area: date; align-self: start; gap: 4px; }
+  .purchase-date strong { font-size: 32px; }
+  .purchase-date span { font-size: 5px; }
+  .purchase-main { grid-area: main; }
+  .purchase-main > span, .purchase-method > span { font-size: 5.5px; }
+  .purchase-main h3 { margin: 3px 0; font-size: 16px; }
+  .purchase-main small, .purchase-method small { font-size: 7px; }
+  .purchase-method { grid-area: method; display: flex; align-items: center; gap: 5px; }
+  .purchase-method strong { font-size: 8px; }
+  .purchase-method small { display: none; }
+  .purchase-complete { grid-area: complete; padding: 4px 3px; font-size: 5px; }
+  .purchase-menu { grid-area: menu; align-self: center; width: 20px; font-size: 16px; }
+  .account-profile-card { padding: 15px; }
+  .profile-identity { gap: 10px; }
+  .account-avatar-large { width: 48px; height: 48px; font-size: 14px; }
+  .profile-identity h3 { font-size: 22px; }
+  .profile-identity > div:nth-child(2) > span { font-size: 6px; }
+  .profile-identity p { flex-wrap: wrap; font-size: 7px; }
+  .profile-tier { padding: 6px; font-size: 5px; }
+  .profile-tier strong { font-size: 6px; }
+  .profile-fields { grid-template-columns: 1fr; gap: 12px; }
+  .profile-passport-stamps { gap: 7px; }
+  .passport-stamp { min-height: 120px; padding-inline: 4px; }
+  .passport-stamp::before { width: 90px; height: 90px; }
+  .passport-stamp::after { width: 78px; height: 78px; }
+  .passport-stamp strong { font-size: 19px; }
+  .passport-stamp-meta, .passport-stamp i { font-size: 5px; }
+  .passport-stamp small { font-size: 4.5px; }
+  .profile-passport-heading > strong { font-size: 6px; }
+  .passport-option-heading h4 { font-size: 23px; }
+  .passport-option-heading p { max-width: 210px; font-size: 8px; }
+  .passport-option-heading > strong { font-size: 5.5px; }
+  .destination-memory-rail { grid-template-columns: none; grid-auto-columns: minmax(164px,44vw); grid-auto-flow: column; overflow-x: auto; padding: 0 2px 9px; scroll-snap-type: x mandatory; }
+  .destination-memory-stamp { height: 100px; }
+  .profile-fields label { gap: 5px; }
+  .profile-fields label > span { font-size: 6px; }
+  .profile-fields input { font-size: 9px; }
+  .profile-edit-actions { align-items: stretch; flex-wrap: wrap; }
+  .profile-edit-actions > span { width: 100%; margin: 0 0 4px; }
+  .profile-edit-actions .account-button { flex: 1; padding-inline: 8px; font-size: 6px; }
+  .account-footer { align-items: flex-start; flex-wrap: wrap; margin-top: 43px; padding-block: 18px; }
+  .account-footer > p { order: 3; width: 100%; font-size: 20px; }
+  .account-footer > span { max-width: 130px; justify-content: flex-end; text-align: right; font-size: 5.5px; }
+  .account-purchase-dialog { padding: 23px 18px; }
+  .account-purchase-dialog h2 { font-size: 33px; }
+}
+
+@media (max-width: 370px) {
+  .account-back-link { font-size: 0; }
+  .account-back-link span { font-size: 16px; }
+  .account-welcome-stamp { width: 62px; height: 75px; }
+  .account-trip-details { grid-template-columns: 1fr; }
+  .account-recommendation-card { grid-template-columns: .75fr 1fr; }
+  .purchase-complete { font-size: 0; }
+  .purchase-complete .account-icon { width: 14px; height: 14px; }
+}
+
+/* Readability pass: increase the account type scale substantially at normal zoom. */
+.account-page { font-size: 18px; }
+.account-page .account-back-link,
+.account-page .account-header-user { font-size: 16px; letter-spacing: .2px; }
+.account-page .account-shortcut { font-size: 14px; letter-spacing: .2px; }
+.account-page .account-shortcut > span { font-size: 14px; }
+.account-page .account-sidebar-label { font-size: 14px; letter-spacing: .35px; }
+.account-page .account-side-nav a { min-height: 58px; font-size: 16px; letter-spacing: 0; }
+.account-page .account-side-nav a small { font-size: 13px; }
+.account-page .account-sidebar-bottom { font-size: 14px; letter-spacing: .2px; }
+.account-page .account-kicker,
+.account-page .account-section-kicker { font-size: 14px; letter-spacing: .35px; }
+.account-page .account-welcome p { font-size: 18px; }
+.account-page .account-welcome-stamp span,
+.account-page .account-welcome-stamp small { font-size: 12px; letter-spacing: .2px; }
+.account-page .account-section-heading p { font-size: 17px; }
+.account-page .account-inline-link { font-size: 15px; letter-spacing: .15px; }
+.account-page .account-trip-topline,
+.account-page .account-trip-city > span:first-child,
+.account-page .account-country { font-size: 14px; letter-spacing: .2px; }
+.account-page .account-trip-details small { font-size: 14px; letter-spacing: .1px; }
+.account-page .account-trip-details strong { font-size: 17px; }
+.account-page .account-button { font-size: 14px; letter-spacing: .1px; }
+.account-page .account-trip-ref { font-size: 13px; }
+.account-page .account-art-coordinate,
+.account-page .account-art-route,
+.account-page .account-art-stamp span,
+.account-page .account-art-stamp small,
+.account-page .account-art-code { font-size: 12px; letter-spacing: .1px; }
+.account-page .account-trip-footnote { font-size: 13px; letter-spacing: 0; }
+.account-page .recommendation-art > span { font-size: 13px; letter-spacing: .15px; }
+.account-page .recommendation-reason { font-size: 13px; letter-spacing: .1px; }
+.account-page .recommendation-content p { font-size: 16px; }
+.account-page .recommendation-content > div > span { font-size: 13px; letter-spacing: 0; }
+.account-page .account-personal-badge { font-size: 13px; letter-spacing: .1px; }
+.account-page .account-demo-note { color: #D0DDDF; font-size: 15px; }
+.account-page .purchase-date span { font-size: 12px; letter-spacing: 0; }
+.account-page .purchase-main > span,
+.account-page .purchase-method > span { font-size: 13px; letter-spacing: .1px; }
+.account-page .purchase-main small,
+.account-page .purchase-method small { font-size: 15px; }
+.account-page .purchase-method strong { font-size: 15px; }
+.account-page .purchase-complete { font-size: 13px; letter-spacing: 0; }
+.account-page .profile-identity > div:nth-child(2) > span,
+.account-page .profile-tier,
+.account-page .profile-passport-heading > div > span,
+.account-page .profile-passport-heading > strong,
+.account-page .passport-option-heading > div > span,
+.account-page .passport-option-heading > strong { font-size: 13px; letter-spacing: .1px; }
+.account-page .profile-identity p { font-size: 16px; }
+.account-page .profile-tier strong { font-size: 15px; }
+.account-page .profile-passport-heading p,
+.account-page .passport-option-heading p { font-size: 16px; }
+.account-page .passport-stamp-meta,
+.account-page .passport-stamp small,
+.account-page .passport-stamp i { font-size: 12px; letter-spacing: 0; }
+.account-page .passport-stamp strong { font-size: 34px; }
+.account-page .profile-passport-note { color: #D0DDDF; font-size: 14px; }
+.account-page .passport-option-heading h4 { font-size: 33px; }
+.account-page .destination-memory-code { font-size: 12px; letter-spacing: 0; }
+.account-page .destination-memory-caption strong { font-size: 23px; }
+.account-page .destination-memory-caption span { font-size: 14px; }
+.account-page .destination-memory-caption small { color: #D0DDDF; font-size: 13px; letter-spacing: 0; }
+.account-page .profile-fields label > span,
+.account-page .profile-edit-actions > span { font-size: 13px; letter-spacing: .1px; }
+.account-page .profile-fields input { min-height: 44px; font-size: 18px; }
+.account-page .profile-edit-actions .account-button { font-size: 14px; }
+.account-page .account-footer > span { font-size: 13px; letter-spacing: 0; }
+.account-page .account-purchase-dialog > div span { font-size: 13px; letter-spacing: .1px; }
+.account-page .account-purchase-dialog > div strong { font-size: 15px; }
+.account-page .account-purchase-dialog p { font-size: 16px; }
+
+@media (max-width: 640px) {
+  .account-page .account-side-nav a { font-size: clamp(11px, 3.2vw, 14px); }
+  .account-page .account-back-link { font-size: 13px; letter-spacing: 0; }
+  .account-page .account-header-user { font-size: 13px; }
+  .account-page .account-welcome p { font-size: 16px; }
+  .account-page .account-welcome-stamp span,
+  .account-page .account-welcome-stamp small { font-size: 10px; }
+  .account-page .account-trip-topline { font-size: 12px; }
+  .account-page .account-trip-details small { font-size: 12px; }
+  .account-page .account-trip-details strong { font-size: 15px; }
+  .account-page .account-button { font-size: 13px; }
+  .account-page .recommendation-content p { font-size: 15px; }
+  .account-page .profile-identity p { font-size: 14px; }
+  .account-page .profile-tier { font-size: 12px; }
+  .account-page .passport-stamp strong { font-size: clamp(17px, 5.2vw, 23px); }
+  .account-page .passport-stamp-meta,
+  .account-page .passport-stamp small,
+  .account-page .passport-stamp i { font-size: 10px; letter-spacing: 0; }
+  .account-page .passport-option-heading { align-items: flex-start; }
+  .account-page .passport-option-heading h4 { font-size: 28px; }
+  .account-page .passport-option-heading p { font-size: 15px; }
+  .account-page .profile-fields input { font-size: 16px; }
+}
+
+.account-page .account-login-control { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.account-page .account-auth-main .account-login-control { display: grid; justify-items: start; gap: 12px; margin: 28px 0 0; }
+.account-page .account-login-control .account-signout { padding: 10px 13px; border: 1px solid rgba(217,160,126,.7); background: transparent; color: var(--light-copper); font: 600 14px "IBM Plex Mono", "Courier New", monospace; letter-spacing: .2px; }
+.account-page .account-login-control .account-signout:hover { background: rgba(217,160,126,.1); }
+.account-page .account-login-error, .account-page .account-load-error { color: #ffb6a1; font-size: 15px; }
+.account-page .account-login-error button { margin-left: 8px; color: var(--light-copper); text-decoration: underline; }
+.account-page .account-auth-main { width: min(760px, calc(100% - 40px)); margin: 0 auto; padding: 15vh 0 70px; }
+.account-page .account-auth-main h1 { margin: 22px 0 14px; color: var(--linen); font: 400 clamp(52px, 7vw, 88px)/.98 "DM Serif Display", Georgia, serif; letter-spacing: -.04em; }
+.account-page .account-auth-main h1 > span { color: var(--copper); }
+.account-page .account-auth-main > p { max-width: 570px; color: #C6D5D7; font-size: 19px; line-height: 1.55; }
+.account-page .account-auth-main > small { display: block; margin-top: 55px; color: var(--mist-blue); font: 600 13px "IBM Plex Mono", "Courier New", monospace; letter-spacing: .4px; }
+.account-page .account-empty-panel { display: grid; justify-items: start; gap: 13px; padding: 30px; border: 1px solid var(--mist-blue); background: rgba(18,56,74,.44); }
+.account-page .account-empty-panel h3 { margin: 0; color: var(--linen); font: 400 29px/1.15 "DM Serif Display", Georgia, serif; }
+.account-page .account-empty-panel p, .account-page .account-empty-inline, .account-page .account-loading { margin: 0; color: #C6D5D7; font-size: 17px; line-height: 1.5; }
+.account-page .account-empty-star { color: var(--copper); font-size: 28px; }
+.account-page .account-empty-panel-compact { margin-top: 3px; padding: 22px 25px; }
+.account-page .account-empty-panel-compact h3 { font-size: 25px; }
+.account-page .account-trips-list { display: grid; gap: 0; margin-top: 20px; }
+.account-page .account-trip-row { display: grid; grid-template-columns: minmax(0,1fr) 150px auto; align-items: center; gap: 20px; padding: 17px 4px; border-bottom: 1px solid rgba(74,124,140,.55); }
+.account-page .account-trip-row > div { display: grid; gap: 5px; }
+.account-page .account-trip-row > div > span { color: var(--light-copper); font: 600 13px "IBM Plex Mono", "Courier New", monospace; }
+.account-page .account-trip-row strong { color: var(--linen); font: 400 24px "DM Serif Display", Georgia, serif; }
+.account-page .account-trip-row small, .account-page .account-trip-row > span, .account-page .account-trip-row > b { color: #C6D5D7; font-size: 15px; }
+.account-page .account-trip-row > b { white-space: nowrap; }
+.account-page .passport-stamp { position: relative; overflow: hidden; }
+.account-page .passport-stamp-nft { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .76; }
+.account-page .passport-stamp-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,20,27,.1), rgba(4,20,27,.72)); }
+.account-page .passport-stamp > :not(.passport-stamp-nft):not(.passport-stamp-shade) { position: relative; z-index: 1; }
+.account-page .profile-membership { display: flex; align-items: center; gap: 22px; margin-top: 22px; padding-top: 22px; border-top: 1px solid rgba(74,124,140,.6); }
+.account-page .profile-membership img { width: min(220px, 35%); height: auto; border: 1px solid var(--mist-blue); }
+.account-page .profile-membership > div { display: grid; gap: 8px; }
+.account-page .profile-membership span { color: var(--light-copper); font: 600 14px "IBM Plex Mono", "Courier New", monospace; }
+.account-page .profile-membership strong { color: var(--linen); font: 400 31px "DM Serif Display", Georgia, serif; }
+.account-page .profile-membership small { color: #C6D5D7; font-size: 15px; }
+.account-page .purchase-status-other { color: #E8BD90; }
+.account-page .account-avatar-image { object-fit: cover; }
+.account-page .account-header .account-login-control { margin-left: 0; }
+.account-page .recommendation-art { background: linear-gradient(135deg, #1C4C5C, #76979A); color: var(--linen); }
+.account-page .passport-stamp-nft { z-index: 0; }
+.account-page .passport-stamp-shade { z-index: 1; }
+.account-page .passport-stamp::before, .account-page .passport-stamp::after { z-index: 1; }
+.account-page .passport-stamp > :not(.passport-stamp-nft):not(.passport-stamp-shade) { z-index: 2; }
+.account-page .destination-memory-stamp { background: var(--petroleum); }
+.account-page .destination-memory-stamp img { width: 100%; height: 100%; object-fit: cover; }
+
+@media (max-width: 640px) {
+  .account-page .account-login-control { gap: 6px; }
+  .account-page .account-login-control .account-signout { padding: 8px; font-size: 11px; }
+  .account-page .account-trip-row { grid-template-columns: 1fr auto; gap: 8px 12px; }
+  .account-page .account-trip-row > span { grid-column: 1; }
+  .account-page .account-trip-row > b { grid-column: 2; grid-row: 2; }
+  .account-page .profile-membership { align-items: flex-start; }
+  .account-page .profile-membership img { width: 34%; }
+  .account-page .profile-membership strong { font-size: 24px; }
+  .account-page .account-auth-main > p { font-size: 16px; }
+  .account-page .account-auth-main > small { font-size: 10px; }
+}

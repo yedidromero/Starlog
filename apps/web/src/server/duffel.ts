@@ -125,6 +125,30 @@ export async function getOffer(id: string): Promise<Offer> {
   return toOffer(await call<RawOffer>("GET", `/air/offers/${encodeURIComponent(id)}`));
 }
 
+type RawOrder = {
+  booking_reference: string;
+  slices: { segments: RawSegment[] }[];
+};
+
+/** Read the confirmed route for older saved bookings that predate itinerary storage. */
+export async function getOrderItinerary(id: string) {
+  const order = await call<RawOrder>("GET", `/air/orders/${encodeURIComponent(id)}`);
+  return {
+    bookingReference: order.booking_reference,
+    itinerary: order.slices.map((slice) => {
+      const first = slice.segments[0];
+      const last = slice.segments.at(-1);
+      if (!first || !last) return null;
+      return {
+        origin: first.origin.city_name || first.origin.iata_code,
+        destination: last.destination.city_name || last.destination.iata_code,
+        departingAt: first.departing_at,
+        arrivingAt: last.arriving_at,
+      };
+    }).filter((leg): leg is NonNullable<typeof leg> => leg !== null),
+  };
+}
+
 export type Passenger = {
   id: string;
   title: "mr" | "ms" | "mrs" | "miss";

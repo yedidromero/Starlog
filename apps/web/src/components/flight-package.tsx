@@ -15,6 +15,7 @@ type Offer = {
 };
 
 type EventInfo = { id: number; title: string; airport: string | null; startsAt: string; currency: string; ticketPrice: string | null };
+type PayWith = "EURC" | "USDC" | "XLM";
 
 type Started = {
   bookingId: number;
@@ -22,17 +23,22 @@ type Started = {
   price: { amount: string; discount: string };
 };
 
-const input = "rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 h-9 text-sm";
+const compactInput = "rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-3 h-9 text-sm";
 const time = (iso: string) => iso.slice(11, 16);
 
 /** "Add a flight": search Duffel, pick an offer, enter the passenger, pay with Pollar. */
-export function FlightPackage({ event, onBooked }: { event: EventInfo; onBooked: () => void }) {
+export function FlightPackage({ event, onBooked, profileSearch = false }: { event?: EventInfo; onBooked: () => void; profileSearch?: boolean }) {
   const { signAndSubmitTx } = usePollar();
-  const dayBefore = new Date(new Date(event.startsAt).getTime() - 86_400_000).toISOString().slice(0, 10);
+  const input = profileSearch
+    ? "rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-4 h-12 text-base"
+    : compactInput;
+  const dayBefore = event ? new Date(new Date(event.startsAt).getTime() - 86_400_000).toISOString().slice(0, 10) : "";
   const [open, setOpen] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState(event?.airport ?? "");
   const [date, setDate] = useState(dayBefore);
-  const [withTicket, setWithTicket] = useState(Boolean(event.ticketPrice));
+  const [withTicket, setWithTicket] = useState(Boolean(event?.ticketPrice));
+  const [payWith, setPayWith] = useState<PayWith>((event?.currency as PayWith) ?? "EURC");
   const [offers, setOffers] = useState<Offer[] | null>(null);
   const [chosen, setChosen] = useState<Offer | null>(null);
   const [pax, setPax] = useState({ title: "ms", gender: "f", givenName: "", familyName: "", bornOn: "", email: "", phoneNumber: "" });
@@ -45,9 +51,9 @@ export function FlightPackage({ event, onBooked }: { event: EventInfo; onBooked:
     setError(null);
     setOffers(null);
     setChosen(null);
-    setBusy("Buscando vuelos…");
+    setBusy("Searching flights…");
     try {
-      setOffers(await post<Offer[]>("/api/flights/search", { origin, destination: event.airport, departureDate: date }));
+      setOffers(await post<Offer[]>("/api/flights/search", { origin, destination: event?.airport ?? destination, departureDate: date }));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -60,28 +66,28 @@ export function FlightPackage({ event, onBooked }: { event: EventInfo; onBooked:
     if (!chosen) return;
     setError(null);
     try {
-      setBusy("Reservando en el escrow…");
+      setBusy("Creating your secure booking…");
       const started = await post<Started>("/api/bookings/package", {
         offerId: chosen.id,
-        payWith: event.currency,
-        eventId: withTicket ? event.id : undefined,
+        payWith: event?.currency ?? payWith,
+        eventId: withTicket && event ? event.id : undefined,
         passenger: pax,
       });
       let fundHash: string | undefined;
       if (started.fundXdr) {
-        setBusy(`Confirma en Pollar el pago de ${formatAmount(BigInt(started.price.amount))} ${event.currency}…`);
+        setBusy(`Confirm the ${formatAmount(BigInt(started.price.amount))} ${event?.currency ?? payWith} payment in Pollar…`);
         const outcome = await signAndSubmitTx(started.fundXdr);
         if (outcome.status !== "success" && outcome.status !== "pending") {
           const detail = "details" in outcome ? outcome.details : undefined;
-          throw new Error(`Pollar no envió el pago (${outcome.status}${detail ? `: ${detail}` : ""})`);
+          throw new Error(`Pollar did not submit the payment (${outcome.status}${detail ? `: ${detail}` : ""})`);
         }
         fundHash = outcome.hash;
       }
-      setBusy("Pago recibido. Comprando el vuelo…");
+      setBusy("Payment received. Booking your flight…");
       const confirmed = await confirmWithRetry<{ bookingReference: string | null }>(started.bookingId, fundHash);
       setDone(
-        `¡Listo! Reserva #${started.bookingId} confirmada. Localizador del vuelo: ${confirmed.bookingReference ?? "—"}` +
-          (withTicket ? " · ticket emitido." : "."),
+        `Done! Booking #${started.bookingId} is confirmed. Airline reference: ${confirmed.bookingReference ?? "—"}` +
+          (withTicket && event ? " · ticket issued." : "."),
       );
       setChosen(null);
       setOffers(null);
@@ -95,30 +101,49 @@ export function FlightPackage({ event, onBooked }: { event: EventInfo; onBooked:
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="self-start text-sm underline mt-1">
-        ✈ Añadir vuelo a {event.airport}
+      <button onClick={() => setOpen(true)} className={profileSearch ? "account-button account-button-copper" : "self-start text-sm underline mt-1"}>
+        {profileSearch ? <>SEARCH FLIGHTS <span aria-hidden="true">↗</span></> : <>✈ Add a flight to {event?.airport}</>}
       </button>
     );
   }
 
   return (
-    <div className="mt-2 rounded-lg bg-black/[.03] dark:bg-white/[.04] p-3 flex flex-col gap-3 text-sm">
+    <div className={`mt-2 rounded-lg bg-black/[.03] dark:bg-white/[.04] ${profileSearch ? "p-5 text-base" : "p-3 text-sm"} flex flex-col gap-3`}>
+      {profileSearch && <p className="opacity-80">Search live flight offers with Duffel, then book securely with Pollar.</p>}
       <form onSubmit={search} className="flex flex-wrap items-center gap-2">
         <input
           value={origin}
           onChange={(e) => setOrigin(e.target.value.toUpperCase().slice(0, 3))}
-          placeholder="Origen (LIS)"
-          className={`${input} w-28 uppercase`}
+            placeholder={profileSearch ? "From (LIS)" : "Origin (LIS)"}
+          aria-label="Origin airport code"
+            className={`${input} ${profileSearch ? "w-36" : "w-28"} uppercase`}
           required
         />
-        <span>→ {event.airport}</span>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={input} required />
-        <button disabled={busy !== null || origin.length !== 3} className="rounded-full border px-3 h-9 disabled:opacity-40">
-          Buscar
+        {profileSearch && (
+          <input
+            value={destination}
+            onChange={(e) => setDestination(e.target.value.toUpperCase().slice(0, 3))}
+            placeholder="To (MAD)"
+            aria-label="Destination airport code"
+            className={`${input} w-40 uppercase`}
+            required
+          />
+        )}
+        {!profileSearch && <span>→ {event?.airport}</span>}
+        <input type="date" aria-label="Departure date" value={date} onChange={(e) => setDate(e.target.value)} className={input} required />
+        {profileSearch && (
+          <select aria-label="Payment currency" value={payWith} onChange={(e) => setPayWith(e.target.value as PayWith)} className={input}>
+            <option value="EURC">Pay with EURC</option>
+            <option value="USDC">Pay with USDC</option>
+            <option value="XLM">Pay with XLM</option>
+          </select>
+        )}
+        <button disabled={busy !== null || origin.length !== 3 || (profileSearch && destination.length !== 3)} className={`${profileSearch ? "rounded-full border px-5 h-12 text-base" : "rounded-full border px-3 h-9"} disabled:opacity-40`}>
+          Search
         </button>
       </form>
 
-      {offers && offers.length === 0 && <p className="opacity-70">No hay vuelos para esa fecha.</p>}
+      {offers && offers.length === 0 && <p className="opacity-70">No flights found for those dates.</p>}
       {offers && offers.length > 0 && !chosen && (
         <ul className="flex flex-col gap-2">
           {offers.map((o) => {
@@ -126,11 +151,16 @@ export function FlightPackage({ event, onBooked }: { event: EventInfo; onBooked:
             return (
               <li key={o.id}>
                 <button
-                  onClick={() => setChosen(o)}
+                  onClick={() => {
+                    setChosen(o);
+                    if (profileSearch && payWith !== "XLM") {
+                      setPayWith(o.totalCurrency === "USD" ? "USDC" : o.totalCurrency === "EUR" ? "EURC" : "XLM");
+                    }
+                  }}
                   className="w-full text-left rounded-lg border border-black/10 dark:border-white/15 p-2 hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <span className="font-medium">{segs.map((s) => s.carrier).join(" + ")}</span> · {time(segs[0].departingAt)} →{" "}
-                  {time(segs.at(-1)!.arrivingAt)} · {segs.length === 1 ? "directo" : `${segs.length - 1} escala`} ·{" "}
+                  {time(segs.at(-1)!.arrivingAt)} · {segs.length === 1 ? "nonstop" : `${segs.length - 1} stop(s)`} ·{" "}
                   <span className="font-medium">
                     {o.totalAmount} {o.totalCurrency}
                   </span>
@@ -144,30 +174,30 @@ export function FlightPackage({ event, onBooked }: { event: EventInfo; onBooked:
       {chosen && (
         <form onSubmit={book} className="flex flex-col gap-2">
           <p>
-            <span className="font-medium">{chosen.airline}</span> · {chosen.totalAmount} {chosen.totalCurrency} + cargo de servicio{" "}
+            <span className="font-medium">{chosen.airline}</span> · {chosen.totalAmount} {chosen.totalCurrency} + service fee{" "}
             <button type="button" onClick={() => setChosen(null)} className="underline">
-              cambiar
+              change
             </button>
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <input className={input} placeholder="Nombre" value={pax.givenName} onChange={(e) => setPax({ ...pax, givenName: e.target.value })} required />
-            <input className={input} placeholder="Apellidos" value={pax.familyName} onChange={(e) => setPax({ ...pax, familyName: e.target.value })} required />
+            <input className={input} placeholder="First name" value={pax.givenName} onChange={(e) => setPax({ ...pax, givenName: e.target.value })} required />
+            <input className={input} placeholder="Last name" value={pax.familyName} onChange={(e) => setPax({ ...pax, familyName: e.target.value })} required />
             <select className={input} value={`${pax.title}/${pax.gender}`} onChange={(e) => { const [title, gender] = e.target.value.split("/"); setPax({ ...pax, title, gender }); }}>
-              <option value="ms/f">Sra.</option>
-              <option value="mr/m">Sr.</option>
+              <option value="ms/f">Ms.</option>
+              <option value="mr/m">Mr.</option>
             </select>
-            <input className={input} type="date" title="Fecha de nacimiento" value={pax.bornOn} onChange={(e) => setPax({ ...pax, bornOn: e.target.value })} required />
+            <input className={input} type="date" title="Date of birth" value={pax.bornOn} onChange={(e) => setPax({ ...pax, bornOn: e.target.value })} required />
             <input className={input} type="email" placeholder="Email" value={pax.email} onChange={(e) => setPax({ ...pax, email: e.target.value })} required />
-            <input className={input} placeholder="Teléfono (+34…)" value={pax.phoneNumber} onChange={(e) => setPax({ ...pax, phoneNumber: e.target.value.replace(/\s/g, "") })} required />
+            <input className={input} placeholder="Phone (+34…)" value={pax.phoneNumber} onChange={(e) => setPax({ ...pax, phoneNumber: e.target.value.replace(/\s/g, "") })} required />
           </div>
-          {event.ticketPrice && (
+          {event?.ticketPrice && (
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={withTicket} onChange={(e) => setWithTicket(e.target.checked)} />
-              Incluir el ticket de {event.title} ({formatAmount(BigInt(event.ticketPrice))} {event.currency})
+              Include the {event.title} ticket ({formatAmount(BigInt(event.ticketPrice))} {event.currency})
             </label>
           )}
           <button disabled={busy !== null} className="self-start rounded-full bg-foreground text-background px-4 h-9 font-medium disabled:opacity-40">
-            Reservar {withTicket ? "vuelo + ticket" : "vuelo"} · pagar en {event.currency}
+            Book {withTicket && event ? "flight + ticket" : "flight"} · pay in {event?.currency ?? payWith}
           </button>
         </form>
       )}

@@ -10,6 +10,7 @@ type Props = {
   /** The Estela session, or null; owned by the page so other components can use it. */
   user: EstelaUser | null;
   onUserChange: (user: EstelaUser | null) => void;
+  appearance?: "default" | "account";
 };
 
 /**
@@ -17,7 +18,8 @@ type Props = {
  * signs Estela's SEP-10 challenge so our backend knows which address it is talking
  * to and opens its own session cookie.
  */
-export function LoginPanel({ user, onUserChange }: Props) {
+export function LoginPanel({ user, onUserChange, appearance = "default" }: Props) {
+  const accountAppearance = appearance === "account";
   const { isAuthenticated, verified, wallet, openLoginModal, logout, getClient } = usePollar();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -50,7 +52,7 @@ export function LoginPanel({ user, onUserChange }: Props) {
         webAuthDomain: challenge.webAuthDomain,
       });
       if (proof.status !== "signed") {
-        throw new Error(proof.details ?? proof.code ?? "Pollar no firmó el challenge");
+        throw new Error(proof.details ?? proof.code ?? "Pollar did not sign the challenge");
       }
       onUserChange(await post<EstelaUser>("/api/auth/verify", { transaction: proof.signedXdr }));
     } catch (err) {
@@ -77,20 +79,30 @@ export function LoginPanel({ user, onUserChange }: Props) {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center gap-3 text-sm">
+      <div className={accountAppearance ? "account-login-control" : "flex flex-col items-center gap-3 text-sm"}>
         <button
           onClick={openLoginModal}
-          className="rounded-full bg-foreground text-background px-6 h-12 font-medium"
+          className={accountAppearance ? "account-button account-button-copper" : "rounded-full bg-foreground text-background px-6 h-12 font-medium"}
+          type="button"
         >
-          Entrar con Pollar
+          SIGN IN
         </button>
-        {pollarError && <p className="text-red-600 max-w-md text-center">{pollarError}</p>}
+        {pollarError && <p className={accountAppearance ? "account-login-error" : "text-red-600 max-w-md text-center"}>{pollarError}</p>}
       </div>
     );
   }
 
   if (wallet?.custody === "smart") {
-    return <p className="text-sm">Las wallets con passkey aún no están soportadas. Entra con Google o email.</p>;
+    return <p className="text-sm">Passkey wallets are not supported yet. Sign in with Google or email.</p>;
+  }
+
+  if (accountAppearance) {
+    return (
+      <div className="account-login-control">
+        {error && <p className="account-login-error" role="alert">{error} <button onClick={linkSession}>RETRY</button></p>}
+        <button onClick={signOut} className="account-signout" type="button">SIGN OUT</button>
+      </div>
+    );
   }
 
   return (
@@ -100,10 +112,10 @@ export function LoginPanel({ user, onUserChange }: Props) {
       </p>
       {user ? (
         <p>
-          Sesión de Estela activa · rol <strong>{user.role}</strong>
+          Starlog session active · role <strong>{user.role}</strong>
         </p>
       ) : (
-        <p>{busy ? "Firmando el acceso a Estela…" : "Falta vincular la sesión de Estela."}</p>
+        <p>{busy ? "Signing in to Starlog…" : "Linking your Starlog session…"}</p>
       )}
       {error && (
         <p className="text-red-600">
@@ -114,7 +126,7 @@ export function LoginPanel({ user, onUserChange }: Props) {
         </p>
       )}
       <button onClick={signOut} className="self-start underline">
-        Cerrar sesión
+        Sign out
       </button>
     </div>
   );

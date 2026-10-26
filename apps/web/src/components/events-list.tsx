@@ -63,7 +63,7 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
   const track = (id: number, p: Purchase) => setPurchases((all) => ({ ...all, [id]: p }));
 
   async function buy(event: EventItem) {
-    track(event.id, { busy: true, message: "Reservando en el escrow…" });
+    track(event.id, { busy: true, message: "Creating your secure booking…" });
     try {
       const started = await post<Started>("/api/bookings", { eventId: event.id });
 
@@ -73,19 +73,19 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
         const outcome = await signAndSubmitTx(started.fundXdr);
         if (outcome.status !== "success" && outcome.status !== "pending") {
           const detail = "details" in outcome ? outcome.details : undefined;
-          throw new Error(`Pollar no envió el pago (${outcome.status}${detail ? `: ${detail}` : ""})`);
+          throw new Error(`Pollar did not submit the payment (${outcome.status}${detail ? `: ${detail}` : ""})`);
         }
         fundHash = outcome.hash;
       }
 
-      track(event.id, { busy: true, message: "Pago recibido. Confirmando la reserva…" });
+      track(event.id, { busy: true, message: "Payment received. Confirming your booking…" });
       const confirmed = await confirmWithRetry(started.bookingId, fundHash);
       const saved = BigInt(started.price.discount) > BigInt(0)
-        ? ` Ahorraste ${formatAmount(BigInt(started.price.discount))} ${event.currency} por tu nivel.`
+        ? ` You saved ${formatAmount(BigInt(started.price.discount))} ${event.currency} with your member level.`
         : "";
       track(event.id, {
         busy: false,
-        message: `¡Listo! Reserva #${confirmed.bookingId} confirmada y ticket emitido.${saved}`,
+        message: `Done! Booking #${confirmed.bookingId} is confirmed and your ticket is ready.${saved}`,
       });
       loadMembership();
       onPurchased();
@@ -94,17 +94,17 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
     }
   }
 
-  if (events === null) return <p className="text-sm opacity-70">Cargando eventos…</p>;
+  if (events === null) return <p className="text-sm opacity-70">Loading events…</p>;
 
   return (
-    <section className="w-full max-w-xl flex flex-col gap-4">
+    <section id="viajes" className="w-full max-w-xl flex flex-col gap-4">
       {membership && (
         <div className="rounded-xl border border-black/10 dark:border-white/15 p-4 text-sm flex flex-col gap-3">
           {membership.passId !== null && (
             // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG from our API
             <img
               src={`/api/meta/pass/${membership.passId}/image?xp=${membership.xp}`}
-              alt={`Estela Pass nivel ${membership.level}`}
+              alt={`Estela Pass, ${membership.level} level`}
               width={400}
               height={250}
               className="w-full h-auto rounded-xl"
@@ -113,14 +113,14 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
           <div>
             <p className="font-medium">Estela Pass · {LEVEL_NAMES[membership.level] ?? membership.level}</p>
             <p className="opacity-70">
-              {membership.xp} XP · descuento {membership.discountBps / 100}% en tus próximas reservas
-              {membership.passId === null && " · tu pase se crea con tu primera reserva"}
+              {membership.xp} XP · {membership.discountBps / 100}% off future bookings
+              {membership.passId === null && " · your pass is minted with your first booking"}
             </p>
           </div>
         </div>
       )}
 
-      {events.length === 0 && <p className="text-sm opacity-70">No hay eventos próximos.</p>}
+      {events.length === 0 && <p className="text-sm opacity-70">There are no upcoming events.</p>}
 
       {events.map((event) => {
         const purchase = purchases[event.id];
@@ -128,7 +128,7 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
           <article key={event.id} className="rounded-xl border border-black/10 dark:border-white/15 p-4 flex flex-col gap-2">
             <h2 className="text-lg font-semibold">{event.title}</h2>
             <p className="text-sm opacity-70">
-              {new Date(event.startsAt).toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" })} ·{" "}
+              {new Date(event.startsAt).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })} ·{" "}
               {[event.venue, event.city].filter(Boolean).join(", ")}
             </p>
             {event.description && <p className="text-sm">{event.description}</p>}
@@ -142,7 +142,7 @@ export function EventsList({ signedIn, onPurchased }: { signedIn: boolean; onPur
                   disabled={!signedIn || purchase?.busy}
                   className="rounded-full bg-foreground text-background px-4 h-9 text-sm font-medium disabled:opacity-40"
                 >
-                  {signedIn ? "Comprar ticket" : "Entra para comprar"}
+                  {signedIn ? "Buy ticket" : "Sign in to book"}
                 </button>
               </div>
             )}

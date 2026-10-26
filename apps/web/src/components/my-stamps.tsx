@@ -18,7 +18,7 @@ export function MyStamps({ refreshKey }: { refreshKey: number }) {
 
   return (
     <section className="w-full max-w-xl flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">Mis sellos</h2>
+      <h2 className="text-lg font-semibold">My stamps</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {stamps.map((s) => (
           <a
@@ -26,12 +26,12 @@ export function MyStamps({ refreshKey }: { refreshKey: number }) {
             href={`/api/meta/stamps/${s.tokenId}`}
             target="_blank"
             rel="noreferrer"
-            title="Ver metadatos del NFT"
+            title="View NFT metadata"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- dynamic SVG from our API */}
             <img
               src={`/api/meta/stamps/${s.tokenId}/image`}
-              alt={s.kind === "event" ? "Sello de evento" : "Sello de viaje"}
+              alt={s.kind === "event" ? "Event stamp" : "Trip stamp"}
               width={300}
               height={300}
               className="w-full h-auto rounded-xl border border-black/10 dark:border-white/15"

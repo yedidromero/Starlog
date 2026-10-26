@@ -1,22 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "@pollar/react/styles.css";
 import "./globals.css";
+import "./mi-starlog/account.css";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Estela",
-  description: "Viajes y tickets de eventos pagados con stablecoins en Stellar",
+  title: "Starlog",
+  description: "Travel to events and book trips with stablecoins on Stellar.",
 };
 
 export default function RootLayout({
@@ -27,10 +17,8 @@ export default function RootLayout({
   return (
     // Browser extensions (e.g. LanguageTool) add attributes to <html> before React
     // hydrates; this only silences mismatches on this element, not its children.
-    <html lang="es" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -21,6 +21,10 @@ export async function POST(req: Request) {
     return json(await searchFlights({ ...parsed.data, adults: 1 }));
   } catch (err) {
     if (err instanceof DuffelError) return json({ error: err.message }, { status: err.status >= 500 ? 502 : 400 });
+    if (err instanceof TypeError && err.message === "fetch failed") {
+      console.error("Duffel flight search could not reach the provider", err);
+      return json({ error: "Duffel is temporarily unavailable. Please try again in a moment." }, { status: 502 });
+    }
     return errorResponse(err);
   }
 }
