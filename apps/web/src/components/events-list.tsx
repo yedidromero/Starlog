@@ -2,7 +2,7 @@
 
 import { usePollar } from "@pollar/react";
 import { useEffect, useState } from "react";
-import { post } from "@/lib/api";
+import { ApiError, post } from "@/lib/api";
 import { confirmWithRetry } from "@/lib/bookings";
 import { formatAmount } from "@/server/pricing";
 import { FlightPackage } from "./flight-package";
@@ -27,11 +27,11 @@ type Started = {
   price: { amount: string; discount: string };
 };
 
-type Purchase = { busy: boolean; message?: string; error?: string };
+type Purchase = { busy: boolean; message?: string; error?: string; errorCode?: string };
 
 /** Upcoming events with a "buy ticket" flow: reserve, pay with Pollar, confirm. */
 export function EventsList({ signedIn, id, className }: { signedIn: boolean; id?: string; className?: string }) {
-  const { signAndSubmitTx } = usePollar();
+  const { signAndSubmitTx, wallet } = usePollar();
   const [events, setEvents] = useState<EventItem[] | null>(null);
   const [purchases, setPurchases] = useState<Record<number, Purchase>>({});
 
@@ -69,7 +69,11 @@ export function EventsList({ signedIn, id, className }: { signedIn: boolean; id?
         message: `Done! Booking #${confirmed.bookingId} is confirmed and your ticket is ready.${saved}`,
       });
     } catch (err) {
-      track(event.id, { busy: false, error: err instanceof Error ? err.message : String(err) });
+      track(event.id, {
+        busy: false,
+        error: err instanceof Error ? err.message : String(err),
+        errorCode: err instanceof ApiError ? err.code : undefined,
+      });
     }
   }
 
@@ -104,7 +108,25 @@ export function EventsList({ signedIn, id, className }: { signedIn: boolean; id?
               </div>
             )}
             {purchase?.message && <p className="event-purchase-result">{purchase.message}</p>}
-            {purchase?.error && <p className="event-purchase-error">{purchase.error}</p>}
+            {purchase?.error && (
+              <div className="event-purchase-error" role="alert">
+                <p>{purchase.error}</p>
+                {purchase.errorCode === "wallet_not_activated" && wallet?.address && (
+                  <div className="event-purchase-recovery">
+                    <a
+                      href={`https://friendbot.stellar.org/?addr=${encodeURIComponent(wallet.address)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Activate wallet on Stellar Testnet
+                    </a>
+                    <button onClick={() => buy(event)} disabled={purchase.busy} className="event-purchase-retry">
+                      Retry purchase
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             {signedIn && event.airport && (
               <FlightPackage
                 event={event}

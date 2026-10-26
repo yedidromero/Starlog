@@ -1708,4 +1708,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .event-card-buy:disabled { cursor: not-allowed; opacity: .58; }
 .event-purchase-result, .event-purchase-error { margin: 0; font-size: 13px; line-height: 1.5; }
 .event-purchase-error { color: #a63d32; }
+.event-purchase-error p { margin: 0; }
+.event-purchase-recovery { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
+.event-purchase-recovery a { color: var(--dark-copper); text-decoration: underline; text-underline-offset: 3px; }
+.event-purchase-retry { min-height: 36px; padding: 0 14px; border: 1px solid var(--deep-petroleum); background: var(--copper); color: var(--deep-petroleum); font: 700 11px "IBM Plex Mono", monospace; text-transform: uppercase; }
 @media (max-width: 700px) { .home-login-control { justify-items: center; } .live-event-panel { padding: 18px; } .event-card { padding: 17px; } }
