@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FlightPackage } from "@/components/flight-package";
 import { LoginPanel, type EstelaUser } from "@/components/login-panel";
 import { MyTickets } from "@/components/my-tickets";
+import { TravelAgent } from "@/components/travel-agent";
 
 type Booking = {
   id: number;
@@ -360,6 +361,7 @@ function AccountDashboardContent({ user, onUserChange }: { user: EstelaUser; onU
       </main>
 
       {selectedPurchase && <PurchaseDialog booking={selectedPurchase} onClose={() => setSelectedPurchase(null)} />}
+      <TravelAgent signedIn />
     </div>
   );
 }

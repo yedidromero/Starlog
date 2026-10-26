@@ -27,13 +27,13 @@ const compactInput = "rounded-lg border border-black/15 dark:border-white/20 bg-
 const time = (iso: string) => iso.slice(11, 16);
 
 /** "Add a flight": search Duffel, pick an offer, enter the passenger, pay with Pollar. */
-export function FlightPackage({ event, onBooked, profileSearch = false }: { event?: EventInfo; onBooked?: () => void; profileSearch?: boolean }) {
+export function FlightPackage({ event, onBooked, profileSearch = false, openByDefault = false }: { event?: EventInfo; onBooked?: () => void; profileSearch?: boolean; openByDefault?: boolean }) {
   const { signAndSubmitTx } = usePollar();
   const input = profileSearch
     ? "rounded-lg border border-black/15 dark:border-white/20 bg-transparent px-4 h-12 text-base"
     : compactInput;
   const dayBefore = event ? new Date(new Date(event.startsAt).getTime() - 86_400_000).toISOString().slice(0, 10) : "";
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openByDefault);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState(event?.airport ?? "");
   const [date, setDate] = useState(dayBefore);

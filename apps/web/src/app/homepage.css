@@ -228,16 +228,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .trip-card { min-width: 0; overflow: hidden; border: 2px solid var(--petroleum); background: var(--linen); color: var(--petroleum); box-shadow: 8px 8px 0 var(--deep-petroleum); }
 .trip-topline { min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 15px; border-bottom: 1px solid var(--petroleum); color: var(--dark-copper); font-size: 9px; font-weight: 600; letter-spacing: 1.3px; }
 .trip-topline span:last-child { color: var(--mist-blue); }
-.trip-graphic { position: relative; height: 126px; overflow: hidden; display: flex; align-items: center; padding: 0 22px; border-bottom: 1px solid var(--petroleum); background: var(--fog); }
+.trip-graphic { position: relative; height: 208px; overflow: hidden; display: flex; align-items: center; padding: 0 22px; border-bottom: 1px solid var(--petroleum); background: var(--fog); }
+.trip-photo-image { object-fit: cover; transition: transform .4s ease; }
+.trip-graphic::after { position: absolute; z-index: 0; inset: 0; background: linear-gradient(90deg, rgba(11,38,51,.55), rgba(11,38,51,.06) 70%), linear-gradient(0deg, rgba(11,38,51,.45), transparent 48%); content: ""; }
+.trip-card:hover .trip-photo-image { transform: scale(1.04); }
 .trip-copper .trip-graphic { background: #E8D2C5; }
 .trip-linen .trip-graphic { background: var(--linen); }
-.trip-number { position: absolute; top: 9px; left: 13px; color: var(--dark-copper); font: 600 9px "IBM Plex Mono", monospace; letter-spacing: 1.2px; }
-.trip-city-glyph { position: relative; z-index: 1; color: var(--petroleum); font: 400 99px/.8 "DM Serif Display", Georgia, serif; letter-spacing: -.06em; }
+.trip-number { position: absolute; z-index: 1; top: 9px; left: 13px; color: white; font: 600 9px "IBM Plex Mono", monospace; letter-spacing: 1.2px; text-shadow: 0 1px 4px rgba(0,0,0,.65); }
+.trip-city-glyph { position: relative; z-index: 1; color: white; font: 400 99px/.8 "DM Serif Display", Georgia, serif; letter-spacing: -.06em; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
 .trip-orbit { position: absolute; top: -63px; right: 34px; width: 210px; height: 210px; border: 1px solid rgba(74,124,140,.7); border-radius: 50%; }
 .trip-orbit::before, .trip-orbit::after { position: absolute; inset: 18px; border: 1px solid rgba(74,124,140,.45); border-radius: 50%; content: ""; }
 .trip-orbit::after { inset: 44px; border-style: dashed; }
 .trip-star { position: absolute; top: 50%; right: 80px; width: 47px; height: 47px; display: grid; place-items: center; border: 1px solid var(--copper); border-radius: 50%; transform: translateY(-50%); }
+.trip-star { z-index: 1; background: rgba(242,236,227,.82); }
 .trip-star .star-seal { width: 30px; height: 30px; }
+.trip-photo-credit { min-height: 27px; display: flex; align-items: center; padding: 4px 12px; border-bottom: 1px solid rgba(18,56,74,.2); color: var(--dark-copper); font: 500 10px/1.3 Inter, sans-serif; }
+.trip-photo-credit:hover { color: var(--petroleum); text-decoration: underline; text-underline-offset: 3px; }
 .trip-content { display: flex; flex-direction: column; align-items: flex-start; padding: 18px 18px 17px; }
 .trip-date { min-height: 27px; color: var(--dark-copper); font-size: 9px; font-weight: 600; letter-spacing: 1.1px; }
 .trip-content h3 { min-height: 62px; margin: 4px 0 7px; color: var(--petroleum); font: 32px/1 "DM Serif Display", Georgia, serif; letter-spacing: -.3px; }
@@ -430,7 +436,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 .assistant-launcher {
   position: fixed !important;
-  z-index: 35 !important;
+  z-index: 120 !important;
   right: 24px !important;
   bottom: 22px !important;
   width: max-content !important;
@@ -454,7 +460,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .assistant-launcher .star-seal { width: 28px; height: 28px; flex: 0 0 28px; color: var(--deep-petroleum); }
 .assistant-panel {
   position: fixed !important;
-  z-index: 36 !important;
+  z-index: 121 !important;
   right: 24px !important;
   bottom: 82px !important;
   width: min(390px, calc(100vw - 28px)) !important;
@@ -468,6 +474,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   color: var(--petroleum) !important;
   box-shadow: 8px 8px 0 var(--dark-copper) !important;
 }
+.assistant-launcher .star-seal { display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: 20px; line-height: 1; }
+.travel-agent-body { min-height: 0; overflow: auto; padding-top: 14px; }
+.travel-agent-greeting { margin: 0; color: var(--petroleum); font: 400 28px/1.08 "DM Serif Display", Georgia, serif; }
+.travel-agent-description { margin: 8px 0 15px; color: var(--dark-copper); font: 16px/1.5 Inter, sans-serif; }
+.travel-agent-actions { display: grid; gap: 8px; }
+.travel-agent-action { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 13px; border: 1px solid var(--petroleum); background: transparent; color: var(--petroleum); font: 700 13px/1.3 Inter, sans-serif; text-align: left; }
+.travel-agent-action-primary { background: var(--copper); box-shadow: 3px 3px 0 var(--deep-petroleum); }
+.travel-agent-action:hover { background-color: var(--fog); }
+.travel-agent-action-primary:hover { background-color: var(--light-copper); }
+.travel-agent-action span { font-size: 18px; }
+.assistant-panel-planner .assistant-disclaimer { font: 13px/1.45 Inter, sans-serif; }
+.assistant-panel-planner .travel-agent-body .account-button { min-height: 46px; }
+.assistant-panel-planner .travel-agent-body .mt-2 { background: var(--fog); }
+.assistant-panel-planner .travel-agent-body input,
+.assistant-panel-planner .travel-agent-body select { background: var(--linen); color: var(--petroleum); }
 .assistant-head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--mist-blue); }
 .assistant-avatar { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--copper); border-radius: 0; background: transparent; color: var(--dark-copper); }
 .assistant-head > span:nth-child(2) { display: grid; gap: 4px; flex: 1; }
@@ -1547,6 +1568,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 }
 @media (max-width: 760px) {
   .starlog-site main p { font-size: 16px !important; }
+  .trip-graphic { height: 180px; }
   .hero-label { font-size: 12px; }
   .hero-description { font-size: 16px; }
   .hero-baseline { font-size: 10px; }

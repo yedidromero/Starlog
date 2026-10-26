@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePollar } from "@pollar/react";
 import { EventsList } from "@/components/events-list";
 import { LoginPanel, type EstelaUser } from "@/components/login-panel";
+import { TravelAgent } from "@/components/travel-agent";
+import Image from "next/image";
 import { JourneyStarMotion } from "./JourneyStarMotion";
 
 type Locale = "es" | "en";
@@ -21,6 +23,10 @@ type Trip = {
   url: string;
   code: string;
   variant: "fog" | "linen" | "copper";
+  image: string;
+  imageAlt: string;
+  imageCredit: string;
+  imageCreditUrl: string;
 };
 
 type MapPlace = {
@@ -122,12 +128,12 @@ const COPY = {
 } as const;
 
 const TRIPS: Trip[] = [
-  { id: "sons", city: { es: "VALÈNCIA", en: "VALENCIA" }, date: { es: "15 NOV 2026 · 18:00", en: "NOV 15, 2026 · 18:00" }, title: { es: "Sons del Cabanyal", en: "Sons del Cabanyal" }, detail: { es: "Concierto escenificado en Teatre El Musical.", en: "Staged concert at Teatre El Musical." }, priceUSDC: "10", priceEUR: { es: "≈ 10 €", en: "≈ €10" }, url: "https://www.valencia.es/w/sons-del-cabanyal.-concierto-escenificado-s.m.-poblados-mar%C3%ADtimos?redirect=%2Fcas%2Fpagina-de-categoria", code: "VLC", variant: "copper" },
-  { id: "albufera", city: { es: "VALÈNCIA", en: "VALENCIA" }, date: { es: "FECHA FLEXIBLE", en: "FLEXIBLE DATE" }, title: { es: "Albufera · bus y barca", en: "Albufera · bus & boat" }, detail: { es: "Ruta de dos horas con paseo tradicional por la laguna.", en: "Two-hour trip with a traditional boat ride on the lagoon." }, priceUSDC: "22", priceEUR: { es: "≈ 22 €", en: "≈ €22" }, url: "https://www.visitvalencia.com/shop/valencia-autobus-turistico/albufera-bus-turistico", code: "ALB", variant: "fog" },
-  { id: "park-guell", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK AVAILABILITY" }, title: { es: "Park Güell · visita guiada", en: "Park Güell · guided visit" }, detail: { es: "Visita guiada de unos 50 minutos; entrada al parque aparte.", en: "About 50 minutes; park admission is separate." }, priceUSDC: "17+", priceEUR: { es: "≈ 17 € + entrada", en: "≈ €17 + admission" }, url: "https://parkguell.barcelona/en/planning-your-visit/guided-tours", code: "BCN", variant: "linen" },
-  { id: "oreja", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "26–27 NOV 2026 · 20:30", en: "NOV 26–27, 2026 · 20:30" }, title: { es: "La Oreja de Van Gogh", en: "La Oreja de Van Gogh" }, detail: { es: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi.", en: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi." }, priceUSDC: "38*", priceEUR: { es: "≈ 38 €*", en: "≈ €38*" }, url: "https://agenda500.barcelona.cat/es/detall/concert-la-oreja-de-van-gogh_99400765693.html", code: "BCN", variant: "copper" },
-  { id: "bryan", city: { es: "MADRID", en: "MADRID" }, date: { es: "10 NOV 2026 · 20:30", en: "NOV 10, 2026 · 20:30" }, title: { es: "Bryan Adams", en: "Bryan Adams" }, detail: { es: "Roll with the Punches · Movistar Arena.", en: "Roll with the Punches · Movistar Arena." }, priceUSDC: "43*", priceEUR: { es: "≈ 43 €*", en: "≈ €43*" }, url: "https://www.movistararena.es/programacion/evento/bryan-adams-roll-with-the-punches/10-11-2026/20%3A30/informacion", code: "MAD", variant: "fog" },
-  { id: "palacio", city: { es: "MADRID", en: "MADRID" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK OPENING TIMES" }, title: { es: "Palacio Real de Madrid", en: "Royal Palace of Madrid" }, detail: { es: "Visita autoguiada de las salas, unos 45 minutos.", en: "Self-guided visit of the rooms, about 45 minutes." }, priceUSDC: "18*", priceEUR: { es: "≈ 18 €*", en: "≈ €18*" }, url: "https://tickets.patrimonionacional.es/es/tickets/palacio-real-de-madrid", code: "MAD", variant: "linen" },
+  { id: "sons", city: { es: "VALÈNCIA", en: "VALENCIA" }, date: { es: "15 NOV 2026 · 18:00", en: "NOV 15, 2026 · 18:00" }, title: { es: "Sons del Cabanyal", en: "Sons del Cabanyal" }, detail: { es: "Concierto escenificado en Teatre El Musical.", en: "Staged concert at Teatre El Musical." }, priceUSDC: "10", priceEUR: { es: "≈ 10 €", en: "≈ €10" }, url: "https://www.valencia.es/w/sons-del-cabanyal.-concierto-escenificado-s.m.-poblados-mar%C3%ADtimos?redirect=%2Fcas%2Fpagina-de-categoria", code: "VLC", variant: "copper", image: "/trips/valencia.jpg", imageAlt: "City of Arts and Sciences reflected in its pools, Valencia", imageCredit: "CivArmy · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:City_of_Arts_and_Sciences,_Valencia,_Spain.jpg" },
+  { id: "albufera", city: { es: "VALÈNCIA", en: "VALENCIA" }, date: { es: "FECHA FLEXIBLE", en: "FLEXIBLE DATE" }, title: { es: "Albufera · bus y barca", en: "Albufera · bus & boat" }, detail: { es: "Ruta de dos horas con paseo tradicional por la laguna.", en: "Two-hour trip with a traditional boat ride on the lagoon." }, priceUSDC: "22", priceEUR: { es: "≈ 22 €", en: "≈ €22" }, url: "https://www.visitvalencia.com/shop/valencia-autobus-turistico/albufera-bus-turistico", code: "ALB", variant: "fog", image: "/trips/albufera.jpg", imageAlt: "Sunset over Albufera lagoon near Valencia", imageCredit: "Kumarmp82 · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Magnificent_sunset_in_Albufera_lake,_Valencia.jpg" },
+  { id: "park-guell", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK AVAILABILITY" }, title: { es: "Park Güell · visita guiada", en: "Park Güell · guided visit" }, detail: { es: "Visita guiada de unos 50 minutos; entrada al parque aparte.", en: "About 50 minutes; park admission is separate." }, priceUSDC: "17+", priceEUR: { es: "≈ 17 € + entrada", en: "≈ €17 + admission" }, url: "https://parkguell.barcelona/en/planning-your-visit/guided-tours", code: "BCN", variant: "linen", image: "/trips/park-guell.jpg", imageAlt: "Colorful mosaic benches at Park Güell in Barcelona", imageCredit: "Txllxt TxllxT · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Barcelona_-_Parc_G%C3%BCell_-_Main_square_-_View_NNE_on_curved_mosaic_benches.jpg" },
+  { id: "oreja", city: { es: "BARCELONA", en: "BARCELONA" }, date: { es: "26–27 NOV 2026 · 20:30", en: "NOV 26–27, 2026 · 20:30" }, title: { es: "La Oreja de Van Gogh", en: "La Oreja de Van Gogh" }, detail: { es: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi.", en: "Tantas cosas que contar Tour 2026 · Palau Sant Jordi." }, priceUSDC: "38*", priceEUR: { es: "≈ 38 €*", en: "≈ €38*" }, url: "https://agenda500.barcelona.cat/es/detall/concert-la-oreja-de-van-gogh_99400765693.html", code: "BCN", variant: "copper", image: "/trips/palau-sant-jordi.jpg", imageAlt: "Palau Sant Jordi concert arena in Barcelona", imageCredit: "Katonams · CC BY-SA 3.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Palau_Sant_Jordi_(Barcelona,_ESP).jpg" },
+  { id: "bryan", city: { es: "MADRID", en: "MADRID" }, date: { es: "10 NOV 2026 · 20:30", en: "NOV 10, 2026 · 20:30" }, title: { es: "Bryan Adams", en: "Bryan Adams" }, detail: { es: "Roll with the Punches · Movistar Arena.", en: "Roll with the Punches · Movistar Arena." }, priceUSDC: "43*", priceEUR: { es: "≈ 43 €*", en: "≈ €43*" }, url: "https://www.movistararena.es/programacion/evento/bryan-adams-roll-with-the-punches/10-11-2026/20%3A30/informacion", code: "MAD", variant: "fog", image: "/trips/movistar-arena.jpg", imageAlt: "Movistar Arena in Madrid", imageCredit: "Luis García · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:WiZink_Center_(Madrid)_01.jpg" },
+  { id: "palacio", city: { es: "MADRID", en: "MADRID" }, date: { es: "CONSULTAR HORARIOS", en: "CHECK OPENING TIMES" }, title: { es: "Palacio Real de Madrid", en: "Royal Palace of Madrid" }, detail: { es: "Visita autoguiada de las salas, unos 45 minutos.", en: "Self-guided visit of the rooms, about 45 minutes." }, priceUSDC: "18*", priceEUR: { es: "≈ 18 €*", en: "≈ €18*" }, url: "https://tickets.patrimonionacional.es/es/tickets/palacio-real-de-madrid", code: "MAD", variant: "linen", image: "/trips/royal-palace.jpg", imageAlt: "Main façade of the Royal Palace of Madrid", imageCredit: "Josefalcaes · CC BY-SA 4.0 · CROPPED", imageCreditUrl: "https://commons.wikimedia.org/wiki/File:Fachada_principal_Palacio_Real_de_Madrid.jpg" },
 ];
 
 const BASE_PLACES: MapPlace[] = [
@@ -299,7 +305,8 @@ export default function Home() {
             {TRIPS.map((trip, index) => (
               <article className={"trip-card trip-" + trip.variant} key={trip.id}>
                 <div className="trip-topline"><span>{trip.city[locale]}</span><span>STL / {trip.code}</span></div>
-                <div className="trip-graphic" aria-hidden="true"><span className="trip-number">0{index + 1}</span><span className="trip-city-glyph">{trip.code.slice(0, 1)}</span><span className="trip-orbit" /><span className="trip-star"><StarSeal /></span></div>
+                <div className="trip-graphic"><Image src={trip.image} alt={trip.imageAlt} fill sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw" className="trip-photo-image" /><span className="trip-number">0{index + 1}</span><span className="trip-city-glyph">{trip.code.slice(0, 1)}</span><span className="trip-orbit" /><span className="trip-star"><StarSeal /></span></div>
+                <a className="trip-photo-credit" href={trip.imageCreditUrl} target="_blank" rel="noreferrer" aria-label={`Photo attribution: ${trip.imageCredit}`}>PHOTO · {trip.imageCredit}</a>
                 <div className="trip-content">
                   <div className="trip-date">{trip.date[locale]}</div>
                   <h3>{trip.title[locale]}</h3><p>{trip.detail[locale]}</p>
@@ -435,6 +442,7 @@ export default function Home() {
           </section>
         </div>
       )}
+      <TravelAgent signedIn={user !== null} />
     </div>
     </>
   );
